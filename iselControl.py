@@ -16,10 +16,8 @@ class ISELController:
         return self.intialize()
 
     def initialize(self):
-        #initializes machine for 3 axis x,y,z
-        self.send_command("@0d2500,2500,2500") #set ref speed
-        self.send_command("@0IR1") #invert z axis so it starts at motor end
         self.send_command("@07") #Section 2.2.1
+        self.write_mem_def()
         self.reference()
         
     def reference(self):
@@ -36,7 +34,7 @@ class ISELController:
         self.relative_move([x, 20000], [y,20000], [z,20000,0,100])
 
     def move_abs_quick(self, x, y, z):
-        self.relative_move([x, 20000], [y,20000], [z,20000,0,100])
+        self.absolute_move([x, 20000], [y,20000], [z,20000,0,100])
         
     def send_command(self, command):
         print "Sending %s..." % command,
@@ -63,10 +61,16 @@ class ISELController:
         else:
             print "Unknown Error Code (%s)" % c 
             
-        return c        
+        return c
+
+    def write_mem_def(self):
+        self.send_command("@0IX")
+        self.send_command("@0d3000,3000,3000")
+        self.send_command("@0IR3")
+        self.send_command("@0IW")
 
 if __name__ == '__main__':
     a = ISELController("/dev/tty.PL2303-00002006")
     a.initialize()
-    a.move_rel_quick(50000,-50000,-50000)
-    a.move_rel_quick(-50000,50000,50000)
+    a.move_rel_quick(-50000,-50000,-50000)
+    a.move_rel_quick(50000,50000,50000)
