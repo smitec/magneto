@@ -7,6 +7,9 @@ class ISELController:
     def __init__(self, comPort):
         self.comPort = comPort
         self.port = serial.Serial(comPort,19200)
+		self.x = 0
+		self.y = 0
+		self.z = 0
 
     def __del__(self):
         self.port.close()
@@ -23,12 +26,21 @@ class ISELController:
     def reference(self):
         #runs motors back to limit switch
         self.send_command("@0R7") #section 2.2.22
+		self.x = 0
+		self.y = 0
+		self.z = 0
 
     def relative_move(self, x, y, z):
         self.send_command("@0A " + ','.join([str(a) for a in x+y+z]))
+		self.x += x
+		self.y += y
+		self.z += z
 
     def absolute_move(self, x, y, z):
         self.send_command("@0M " + ','.join([str(a) for a in x+y+z]))
+		self.x = x
+		self.y = y
+		self.z = z
 
     def move_rel_quick(self, x, y, z):
         self.relative_move([x, 20000], [y,20000], [z,20000,0,100])
