@@ -116,7 +116,7 @@ def do_plot(voltage):
 	plt.grid(True)
 	plt.show()
 	#pdb.set_trace()
-	f = open("output/v%.2f_data", "w")
+	f = open("output/v%.2f_data" % voltage, "w")
 	for k in range(length(freq_l)):
 		f.write("%f,%f" % (freq_l[k], voltage_l[k]))
 	f.close()
