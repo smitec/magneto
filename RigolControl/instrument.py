@@ -1,4 +1,4 @@
-import os
+import os, time
  
 class usbtmc: 
     def __init__(self, device):
@@ -79,12 +79,29 @@ class RigolDSE1000:
 			s = self.instrument.read(20)
 		return s
 	
+	def get_voltage_info(self, channel):
+		need = ["SCAL?", "PROB?", "OFFS?"]
+		res = []
+		for item in need:
+			self.instrument.write(":CHAN%i:%s" % (channel, item))
+			s = '*'
+			while s[0] == '*':
+				self.instrument.write(":CHAN%i:%s" % (channel, item))
+				s = self.instrument.read(20)
+				res.append[s]
+			scale, probe, offset = float(res[0]), float(res[1]), float(res[2])
+			return [(scale + offset)*probe, (scale + offset)*probe*255]
+	
 	def get_waveform(self, channel, mode = "NOR"):
+		self.autoset()
 		#from testing it always seems to b in normal mode
-		self.instrument.write(":WAV:POINT:MODE mode")
-		self.instrument.write("WAV:DATA? CHAN%i" % channel)
+		self.instrument.write(":WAV:POIN:MODE %s" % mode)
 		s = "*"
-		while s[0] = "*":
+		while s[0] == "*":
+			self.instrument.write(":WAV:DATA? CHAN%i" % channel)
 			s = self.instrument.read(1024)
-		return s
+		return s[10:] #first 10 bytes are pcket info so discard these
+	
+	def wait_for_ready(self):
+		self.measure("period", 1) #once this return we know eveything is good
 		

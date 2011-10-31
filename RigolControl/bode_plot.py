@@ -126,14 +126,14 @@ def read_wave():
 	scope, funcgen = find_instruments()
 	
 	# set the funcgen to 100hz, 5vpp sine with 0v offset
-	funcgen.write("APPL:SIN %i,%.2f,0" % (start, voltage))
+	funcgen.write("APPL:SIN %i,%.2f,0" % (100, 5))
 	time.sleep(1)
 	funcgen.write("OUTP ON")
 	
-	scopeControl = RigolDSE1000(scope)
+	scopeControl = instrument.RigolDSE1000(scope)
 	
 	scopeControl.autoset()
-	
+	wait_for_ready(scope)
 	d = scopeControl.get_waveform(2)
 	
 	plt.plot(range(len(d)), d)
