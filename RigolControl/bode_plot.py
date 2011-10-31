@@ -4,6 +4,7 @@ import instrument
 import os.path, sys, time, pdb
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 def find_instruments():
 	print "Looking for devices..."
@@ -128,7 +129,7 @@ def read_wave():
 	scopeControl = instrument.RigolDSE1000(scope)
 	funcControl = instrument.RigolDG3000(funcgen)
 	
-	funcControl.make_arb([str(500*(i%2)) for i in range(10)])
+	funcControl.make_trap(10,20,30)
 	
 	scopeControl.autoset()
 	d = scopeControl.get_waveform(2)

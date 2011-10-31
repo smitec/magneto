@@ -32,21 +32,36 @@ class RigolDG3000:
 		comms = [
 			"*IDN?",
 			"FUNC USER", 
-			"FREQ 10000", 
+			"FREQ 2441.40625", #one sample approx .1us
 			"VOLT:UNIT VPP",
-			"VOLT:HIGH 4",
-			"VOLT:HIGH 0",
-			"DATA:DAC VOLATILE," + ",".join(volt),
+			"VOLT:HIGH 5",
+			"VOLT:LOW -5",
+			"DATA VOLATILE," + ",".join(volt),
 			"FUNC:USER VOLATILE",
-			"OUTP ON"
+			"OUTP ON",
+			"FUNC USER"
 			]
 		for c in comms:
 			print c
 			self.instrument.write(c)
-		
-		
+			time.sleep(1)
+			if (len(c) > 100):
+				time.sleep(5)
 	
-		
+	def make_trap(self, rise, high, fall):
+		"""Make a trapezoid, all times in micro seconds (min .2us resolution)"""
+		#10K points gives that much such that the rest of the 1ms is low
+		dat = []
+		for i in range(int(rise*10)):
+			dat.append(str(i/(rise*10.0)))
+		for i in range(int(high*10)):
+			dat.append(str(1))
+		for i in range(int(fall*10)):
+			dat.append(str((int(fall*10)-i)/(fall*10.0)))
+		for i in range(4096 - int(rise*5 + high*5 + fall*5)):
+			dat.append(str(0))
+		self.make_arb(dat)
+	
 class RigolDSE1000:
 	"""Class to control the DSE1000 series oscilliscopes""" 
 	def __init__(self, instrument):
@@ -105,7 +120,8 @@ class RigolDSE1000:
 			return [(scale + offset)*probe, (scale + offset)*probe*255]
 	
 	def get_waveform(self, channel, mode = "NOR"):
-		self.autoset()
+		self.instrument.write(":TIMEBASE:SCALE %f" % float(50e-6))
+		time.sleep(3)
 		#from testing it always seems to b in normal mode
 		self.instrument.write(":WAV:POIN:MODE %s" % mode)
 		s = "*"
