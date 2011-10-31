@@ -95,7 +95,7 @@ def do_plot(voltage, st, stp):
 
 		print "actual freq: %1.2f freq: %s; amplitude: %s, timebase set: %1.10f, ticker: %i,%i" % (i, freq, vamp, 0.25/i, ticker, i % ticker)
 		
-		voltage_l.append(float(vamp))
+		voltage_l.append(float(vamp)/(3.7*voltage))
 		freq_l.append(i)
 		
 		scope.write(":CHAN1:SCAL %5.3f" % (float(vamp)/4))
@@ -123,5 +123,5 @@ def do_plot(voltage, st, stp):
 	
 
 if __name__ == "__main__":
-	do_plot(0.1, 1, 20000)
+	do_plot(0.1, 100, 20000)
 
