@@ -52,9 +52,9 @@ def scope_meas(scope, param):
 		s = scope.read(20)
 	return s
 
-def do_plot(voltage):
-	start = 100
-	stop = 10000000
+def do_plot(voltage, st, stp):
+	start = st
+	stop = stp
 	step_scale = 1
 
 	# initial setup
@@ -117,11 +117,11 @@ def do_plot(voltage):
 	plt.show()
 	#pdb.set_trace()
 	f = open("output/v%.2f_data" % voltage, "w")
-	for k in range(length(freq_l)):
+	for k in range(len(freq_l)):
 		f.write("%f,%f" % (freq_l[k], voltage_l[k]))
 	f.close()
 	
 
 if __name__ == "__main__":
-	do_plot(0.1)
+	do_plot(0.1, 1, 20000)
 
