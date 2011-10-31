@@ -52,7 +52,7 @@ def scope_meas(scope, param):
 		s = scope.read(20)
 	return s
 
-def do_plot():
+def do_plot(voltage):
 	start = 100
 	stop = 10000000
 	step_scale = 1
@@ -60,8 +60,8 @@ def do_plot():
 	# initial setup
 	scope, funcgen = find_instruments()
 	
-	# set the funcgen to 100hz, 1vpp sine with 0v offset
-	funcgen.write("APPL:SIN %i,5.0,0" % start)
+	# set the funcgen to 100hz, 5vpp sine with 0v offset
+	funcgen.write("APPL:SIN %i,%.2f,0" % (start, voltage))
 	time.sleep(1)
 	funcgen.write("OUTP ON")
 	
@@ -75,7 +75,7 @@ def do_plot():
 	wait_for_ready(scope)
 
 	i = int(start)
-	ticker = i
+	ticker = int(start)
 
 	voltage_l = []
 	freq_l = []
@@ -85,7 +85,7 @@ def do_plot():
 	
 	while i <= int(stop):
 		
-		funcgen.write('APPL:SIN %i,5.0,0' % i)
+		funcgen.write('APPL:SIN %i,%.2f,0' % (i, voltage))
 		scope.write(":TIM:SCAL %2.10f" % (0.75/i))
 		time.sleep(0.75)
 
@@ -102,7 +102,8 @@ def do_plot():
 		time.sleep(0.2)
 		scope.write(":T%50")
 		time.sleep(0.2)
-
+		
+		#add start/step_scale 
 		i += ticker/step_scale
 		if (1.0 * i / ticker) >= 10:
 			ticker *= 10
@@ -115,8 +116,12 @@ def do_plot():
 	plt.grid(True)
 	plt.show()
 	#pdb.set_trace()
+	f = open("output/v%.2f_data", "w")
+	for k in range(length(freq_l)):
+		f.write("%f,%f" % (freq_l[k], voltage_l[k]))
+	f.close()
 	
 
 if __name__ == "__main__":
-	do_plot()
+	do_plot(0.1)
 
