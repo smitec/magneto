@@ -31,7 +31,7 @@ class RigolDG3000:
 	def make_arb(self, volt):
 		comms = [
 			"FUNC USER", 
-			"FREQ 10", 
+			"FREQ 100", 
 			"VOLT:UNIT VPP",
 			"VOLT:HIGH 5",
 			"VOLT:HIGH 0",
