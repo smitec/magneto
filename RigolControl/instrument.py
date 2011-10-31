@@ -13,6 +13,10 @@ class usbtmc:
     def read(self, length = 4000):
         return os.read(self.FILE, length)
 
+	def name(self):
+		self.write("*IDN?")
+		return self.read(300)	
+
 class RigolDG3000:
 	"""Class to control the DG3000 series function gens"""
 	def __init__(self, instrument):
@@ -113,9 +117,9 @@ class RigolDSE1000:
 		self.measure("period", 1) #once this return we know eveything is good
 		
 	def get_name(self):
-        self.write("*IDN?")
-        return self.read(300)
+		self.write("*IDN?")
+		return self.read(300)
 
 	def send_reset(self):
-	    self.write("*RST")
+		self.write("*RST")
 		

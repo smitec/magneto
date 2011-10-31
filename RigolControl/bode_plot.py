@@ -13,8 +13,8 @@ def find_instruments():
 		print "Could not find two usbtmc devices. Make sure that the oscilloscope and function generator are both connected and switched on."
 		sys.exit(1)
 
-	tmc1 = instrument.RigolInstrument('/dev/usbtmc0')
-	tmc2 = instrument.RigolInstrument('/dev/usbtmc1')
+	tmc1 = instrument.usbtmc('/dev/usbtmc0')
+	tmc2 = instrument.usbtmc('/dev/usbtmc1')
 
 	scope = ''
 	funcgen = ''
