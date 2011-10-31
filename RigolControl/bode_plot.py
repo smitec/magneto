@@ -128,7 +128,7 @@ def read_wave():
 	scopeControl = instrument.RigolDSE1000(scope)
 	funcControl = instrument.RigolDG3000(funcgen)
 	
-	funcControl.make_arb([str(16383*(i%2)) for i in range(10)])
+	funcControl.make_arb([str(500*(i%2)) for i in range(10)])
 	
 	scopeControl.autoset()
 	d = scopeControl.get_waveform(2)

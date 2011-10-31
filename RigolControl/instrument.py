@@ -30,16 +30,18 @@ class RigolDG3000:
 	
 	def make_arb(self, volt):
 		comms = [
+			"*IDN?",
 			"FUNC USER", 
-			"FREQ 100", 
+			"FREQ 10000", 
 			"VOLT:UNIT VPP",
-			"VOLT:HIGH 5",
+			"VOLT:HIGH 4",
 			"VOLT:HIGH 0",
 			"DATA:DAC VOLATILE," + ",".join(volt),
 			"FUNC:USER VOLATILE",
 			"OUTP ON"
 			]
 		for c in comms:
+			print c
 			self.instrument.write(c)
 		
 		
