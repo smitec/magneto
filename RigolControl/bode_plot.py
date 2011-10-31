@@ -13,8 +13,8 @@ def find_instruments():
 		print "Could not find two usbtmc devices. Make sure that the oscilloscope and function generator are both connected and switched on."
 		sys.exit(1)
 
-	tmc1 = instrument.RigolScope('/dev/usbtmc0')
-	tmc2 = instrument.RigolScope('/dev/usbtmc1')
+	tmc1 = instrument.RigolInstrument('/dev/usbtmc0')
+	tmc2 = instrument.RigolInstrument('/dev/usbtmc1')
 
 	scope = ''
 	funcgen = ''
@@ -118,10 +118,26 @@ def do_plot(voltage, st, stp):
 	#pdb.set_trace()
 	f = open("output/v%.2f_data" % voltage, "w")
 	for k in range(len(freq_l)):
-		f.write("%f,%f" % (freq_l[k], voltage_l[k]))
+		f.write("%f,%f\n" % (freq_l[k], voltage_l[k]))
 	f.close()
 	
-
+def read_wave():
+	# initial setup
+	scope, funcgen = find_instruments()
+	
+	# set the funcgen to 100hz, 5vpp sine with 0v offset
+	funcgen.write("APPL:SIN %i,%.2f,0" % (start, voltage))
+	time.sleep(1)
+	funcgen.write("OUTP ON")
+	
+	scopeControl = RigolDSE1000(scope)
+	
+	scopeControl.autoset()
+	
+	d = scopeControl.get_waveform(2)
+	
+	plt.plot(range(len(d)), d)
+	
 if __name__ == "__main__":
-	do_plot(0.1, 100, 20000)
+	read_wave()
 
