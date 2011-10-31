@@ -125,11 +125,6 @@ def read_wave():
 	# initial setup
 	scope, funcgen = find_instruments()
 	
-	# set the funcgen to 100hz, 5vpp sine with 0v offset
-	funcgen.write("APPL:SIN %i,%.2f,0" % (100, 5))
-	time.sleep(1)
-	funcgen.write("OUTP ON")
-	
 	scopeControl = instrument.RigolDSE1000(scope)
 	funcControl = instrument.RigolDG3000(funcgen)
 	
