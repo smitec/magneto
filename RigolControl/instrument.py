@@ -12,32 +12,6 @@ class usbtmc:
  
     def read(self, length = 4000):
         return os.read(self.FILE, length)
- 
-    def getName(self):
-        self.write("*IDN?")
-        return self.read(300)
- 
-    def sendReset(self):
-        self.write("*RST")
- 
-class RigolInstrument:
-    """Class to control any compliant Rigol instrument"""
-    def __init__(self, device):
-        self.meas = usbtmc(device)
- 
-        self.name = self.meas.getName()
- 
-    def write(self, command):
-        """Send an arbitrary command directly to the instrument"""
-        self.meas.write(command)
- 
-    def read(self, command):
-        """Read an arbitrary amount of data directly from the instrument"""
-        return self.meas.read(command)
- 
-    def reset(self):
-        """Reset the instrument"""
-        self.meas.sendReset()
 
 class RigolDSE1000:
 	"""Class to control the DSE1000 series oscilliscopes""" 
@@ -64,6 +38,10 @@ class RigolDSE1000:
 			"pdutycycle":"PDUT?",
 			"ndutycycle":"NDUT?"
 			}
+			
+	def __del__(self):
+		#release the controls back to the user
+		self.instrument.write(":KEY:FORCE")
 	
 	def autoset(self, waitTime = 5):
 		"""Run and autoset with an optional wait time"""
@@ -100,8 +78,15 @@ class RigolDSE1000:
 		while s[0] == "*":
 			self.instrument.write(":WAV:DATA? CHAN%i" % channel)
 			s = self.instrument.read(1024)
-		return s[10:] #first 10 bytes are pcket info so discard these
+		return s[10:] #first 10 bytes are packet info so discard these
 	
 	def wait_for_ready(self):
 		self.measure("period", 1) #once this return we know eveything is good
+		
+	def get_name(self):
+        self.write("*IDN?")
+        return self.read(300)
+
+	def send_reset(self):
+	    self.write("*RST")
 		

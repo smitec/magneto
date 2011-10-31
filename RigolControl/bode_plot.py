@@ -133,10 +133,11 @@ def read_wave():
 	scopeControl = instrument.RigolDSE1000(scope)
 	
 	scopeControl.autoset()
-	wait_for_ready(scope)
 	d = scopeControl.get_waveform(2)
 	
-	plt.plot(range(len(d)), d)
+	plt.plot(range(len(d)), np.fromstring(d, np.uint8))
+	plt.show()
+	
 	
 if __name__ == "__main__":
 	read_wave()
