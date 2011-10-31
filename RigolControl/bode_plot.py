@@ -18,7 +18,7 @@ def find_instruments():
 
 	scope = ''
 	funcgen = ''
-	pdb.set_trace()
+	
 	if tmc1.name().find('DS1102E') > -1:
 		print "Found DS1102E on /dev/usbtmc0"
 		scope = tmc1
@@ -133,7 +133,7 @@ def read_wave():
 	scopeControl = instrument.RigolDSE1000(scope)
 	funcControl = instrument.RigolDG3000(funcgen)
 	
-	funcControl.make_arb([16383*(i%2) for i in range(100000)])
+	funcControl.make_arb([str(16383*(i%2)) for i in range(100000)])
 	
 	scopeControl.autoset()
 	d = scopeControl.get_waveform(2)

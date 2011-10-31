@@ -1,17 +1,16 @@
 import os, time
  
 class usbtmc: 
-    def __init__(self, device):
-        self.device = device
-        self.FILE = os.open(device, os.O_RDWR)
+	def __init__(self, device):
+		self.device = device
+		self.FILE = os.open(device, os.O_RDWR)
+		# TODO: Test that the file opened
  
-        # TODO: Test that the file opened
+	def write(self, command):
+		os.write(self.FILE, command);
  
-    def write(self, command):
-        os.write(self.FILE, command);
- 
-    def read(self, length = 4000):
-        return os.read(self.FILE, length)
+	def read(self, length = 4000):
+		return os.read(self.FILE, length)
 
 	def name(self):
 		self.write("*IDN?")
