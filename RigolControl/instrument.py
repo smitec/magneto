@@ -121,5 +121,5 @@ class RigolDSE1000:
 		return self.read(300)
 
 	def send_reset(self):
-		self.write("*RST")
+		self.instrument.write("*RST")
 		

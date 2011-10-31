@@ -18,7 +18,7 @@ def find_instruments():
 
 	scope = ''
 	funcgen = ''
-
+	pdb.set_trace()
 	if tmc1.name().find('DS1102E') > -1:
 		print "Found DS1102E on /dev/usbtmc0"
 		scope = tmc1
