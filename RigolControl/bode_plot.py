@@ -19,14 +19,14 @@ def find_instruments():
 	scope = ''
 	funcgen = ''
 
-	if tmc1.name.find('DS1102E') > -1:
+	if tmc1.get_name.find('DS1102E') > -1:
 		print "Found DS1102E on /dev/usbtmc0"
 		scope = tmc1
 	else:
 		print "Found DS1102E on /dev/usbtmc1"
 		scope = tmc2
 
-	if tmc1.name.find('DG1022') > -1:
+	if tmc1.get_name.find('DG1022') > -1:
 		print "Found DG1022 on /dev/usbtmc0"
 		funcgen = tmc1
 	else:
