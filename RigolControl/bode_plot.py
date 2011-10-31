@@ -131,6 +131,9 @@ def read_wave():
 	funcgen.write("OUTP ON")
 	
 	scopeControl = instrument.RigolDSE1000(scope)
+	funcControl = instrument.RigolDG3000(funcgen)
+	
+	funcControl.make_arb([16383*(i%2) for i in range(100000)])
 	
 	scopeControl.autoset()
 	d = scopeControl.get_waveform(2)

@@ -13,6 +13,35 @@ class usbtmc:
     def read(self, length = 4000):
         return os.read(self.FILE, length)
 
+class RigolDG3000:
+	"""Class to control the DG3000 series function gens"""
+	def __init__(self, instrument):
+		self.instrument = instrument
+		
+	def __del__(self):
+		#release the controls back to the user
+		self.instrument.write("SYST:LOC")
+		
+	def sin_out(self, freq, amp, offset):
+		self.instrument.write("APPL:SIN:CH1 %i,%.2f,%.2f" % (freq, amp, offset))
+	
+	def make_arb(self, volt):
+		comms = [
+			"FUNC USER", 
+			"FREQ 10", 
+			"VOLT:UNIT VPP",
+			"VOLT:HIGH 5",
+			"VOLT:HIGH 0",
+			"DATA:DAC VOLATILE," + ",".join(volt),
+			"FUNC:USER VOLATILE",
+			"OUTP ON"
+			]
+		for c in comms:
+			self.instrument.write(c)
+		
+		
+	
+		
 class RigolDSE1000:
 	"""Class to control the DSE1000 series oscilliscopes""" 
 	def __init__(self, instrument):
