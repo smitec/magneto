@@ -11,7 +11,8 @@ def find_instruments():
 
 	# find the scope and function generator
 	if not (os.path.exists('/dev/usbtmc0') and os.path.exists('/dev/usbtmc1')):
-		print "Could not find two usbtmc devices. Make sure that the oscilloscope and function generator are both connected and switched on."
+		print "Could not find two usbtmc devices."
+		print "Make sure that the oscilloscope and function generator are both connected and switched on."
 		sys.exit(1)
 
 	tmc1 = instrument.usbtmc('/dev/usbtmc0')
@@ -117,6 +118,7 @@ def do_plot(voltage, st, stp):
 	plt.grid(True)
 	plt.show()
 	#pdb.set_trace()
+	
 	f = open("output/v%.2f_data" % voltage, "w")
 	for k in range(len(freq_l)):
 		f.write("%f,%f\n" % (freq_l[k], voltage_l[k]))

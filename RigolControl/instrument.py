@@ -140,3 +140,39 @@ class RigolDSE1000:
 	def send_reset(self):
 		self.instrument.write("*RST")
 		
+
+def find_instruments():
+	print "Looking for devices..."
+
+	# find the scope and function generator
+	#TODO make this search all tmc devices not just these two
+	if not (os.path.exists('/dev/usbtmc0') and os.path.exists('/dev/usbtmc1')):
+		print "Could not find two usbtmc devices."
+		print "Make sure that the oscilloscope and function generator are both connected and switched on."
+		sys.exit(1)
+
+	tmc1 = instrument.usbtmc('/dev/usbtmc0')
+	tmc2 = instrument.usbtmc('/dev/usbtmc1')
+
+	scope = ''
+	funcgen = ''
+
+	if tmc1.name().find('DS1102E') > -1:
+		print "Found DS1102E on /dev/usbtmc0"
+		scope = tmc1
+	else:
+		print "Found DS1102E on /dev/usbtmc1"
+		scope = tmc2
+
+	if tmc1.name().find('DG1022') > -1:
+		print "Found DG1022 on /dev/usbtmc0"
+		funcgen = tmc1
+	else:
+		print "Found DG1022 on /dev/usbtmc1"
+		funcgen = tmc2
+
+	if not (scope and funcgen):
+		print "Could not initialise scope and function generator"
+		sys.exit(1)
+
+	return RigolDSE1000(scope), RigolDG3000(funcgen)
