@@ -1,12 +1,14 @@
 from Tkinter import *
+import tkMessageBox
 import iselControl
-import RigolControl.instrument
+import RigolControl.instrument as instrument
 
 class CNCControl:
 	
 	def __init__(self, master):
 		frame = Frame(master)
 		frame.pack()
+		
 		
 		self.canvasItems = []
 		
@@ -27,6 +29,10 @@ class CNCControl:
 		#clear Button
 		self.btnClear = Button(self.controlFrame, text="Clear", command=self.clear_canvas)
 		self.btnClear.pack(side=LEFT)
+		#connect button for scope and func
+		self.btnConnect = Button(self.controlFrame, text="Connect to Rigol", command=self.rigol_connect)
+		self.btnConnect.pack(side=LEFT)
+		
 		self.controlFrame.pack()
 		
 	def draw(self):
@@ -38,7 +44,13 @@ class CNCControl:
 	def clear_canvas(self):
 		 self.plotArea.delete(ALL)
 		
-		
+	def rigol_connect(self):
+		self.scope, self.func = instrument.find_instruments()
+		if not (self.scope):
+			tkMessageBox.showinfo(message="Couldn't Find Scope, Connect and Try Again")
+			
+		if not (self.func):
+			tkMessageBox.showinfo(message="Couldn't Fing Function Gen, Conect and Try Again")
 		
 if __name__ == "__main__":
 	root = Tk()

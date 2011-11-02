@@ -149,7 +149,8 @@ def find_instruments():
 	if not (os.path.exists('/dev/usbtmc0') and os.path.exists('/dev/usbtmc1')):
 		print "Could not find two usbtmc devices."
 		print "Make sure that the oscilloscope and function generator are both connected and switched on."
-		sys.exit(1)
+		return None, None
+		#sys.exit(1)
 
 	tmc1 = instrument.usbtmc('/dev/usbtmc0')
 	tmc2 = instrument.usbtmc('/dev/usbtmc1')
@@ -173,6 +174,7 @@ def find_instruments():
 
 	if not (scope and funcgen):
 		print "Could not initialise scope and function generator"
-		sys.exit(1)
+		return None, None
+		#sys.exit(1)
 
 	return RigolDSE1000(scope), RigolDG3000(funcgen)
