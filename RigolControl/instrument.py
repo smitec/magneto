@@ -48,6 +48,11 @@ class RigolDG3000:
 			if (len(c) > 100):
 				time.sleep(5)
 	
+	def set_output(self, stat="ON"):
+		#todo this should really try ensure it starts from the beginning
+		self.instrument.write("FUCN USER")
+		self.instrument.write("OUTP %s" % stat)
+	
 	def make_trap(self, rise, high, fall):
 		"""Make a trapezoid, all times in micro seconds (min .2us resolution)"""
 		#10K points gives that much such that the rest of the 1ms is low

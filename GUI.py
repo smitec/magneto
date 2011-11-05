@@ -9,8 +9,9 @@ class CNCControl:
 		frame = Frame(master)
 		frame.pack()
 		
-		
 		self.canvasItems = []
+		self.scope = None
+		self.func = None
 		
 		#everything to the right of the sidebar
 		self.mainFrame = Frame(frame)
@@ -31,9 +32,14 @@ class CNCControl:
 		#test draw button
 		self.btnTest = Button(self.controlFrame, text="Draw", command=self.draw)
 		self.btnTest.grid(row=0, column=1)
+		
+		#get waveform button
+		self.btnTest = Button(self.controlFrame, text="Get Waveform", command=self.get_waveform)
+		self.btnTest.grid(row=0, column=2)
+		
 		#clear Button
 		self.btnClear = Button(self.controlFrame, text="Clear", command=self.clear_canvas)
-		self.btnClear.grid(row=0, column=2)
+		self.btnClear.grid(row=0, column=3)
 		
 		#pack control Frame
 		self.controlFrame.grid(row = 1, column = 0)
@@ -77,8 +83,23 @@ class CNCControl:
 		for i in range(len(points)-1):
 			self.canvasItems.append(self.plotArea.create_line(i,points[i], i+1, points[i+1]))
 			
+	def get_waveform(self):
+		self.clear_canvas()
+		if (self.scope and self.func):
+			self.func.set_output("ON")
+			#todo single trigger
+			result = self.scope.get_waveform()
+			self.func.set_output("OFF")
+			
+			for i in range(len(result) - 1):
+				self.canvasItems.append(self.plotArea.create_line(i,result[i], i+1, result[i+1]))
+		else:
+			tkMessageBox.showinfo(message="One or More Instruments Not Connected")
+			
+	
 	def clear_canvas(self):
-		 self.plotArea.delete(ALL)
+		self.plotArea.delete(ALL)
+		self.canvasItems = []
 		
 	def rigol_connect(self):
 		self.scope, self.func = instrument.find_instruments()
