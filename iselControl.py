@@ -33,21 +33,21 @@ class ISELController:
 
 	def relative_move(self, x, y, z):
 		self.send_command("@0A " + ','.join([str(a) for a in x+y+z]))
-		self.x += x
-		self.y += y
-		self.z += z
+		self.x += x[0]
+		self.y += y[0]
+		self.z += z[0]
 
 	def absolute_move(self, x, y, z):
 		self.send_command("@0M " + ','.join([str(a) for a in x+y+z]))
-		self.x = x
-		self.y = y
-		self.z = z
+		self.x = x[0]
+		self.y = y[0]
+		self.z = z[0]
 	
 	def move_rel_quick(self, x, y, z):
-		self.relative_move([x, 20000], [y,20000], [z,20000,0,100])
+		self.relative_move([x, 20000], [y,10000], [z,20000,0,100])
 
 	def move_abs_quick(self, x, y, z):
-		self.absolute_move([x, 20000], [y,20000], [z,20000,0,100])
+		self.absolute_move([x, 20000], [y,10000], [z,20000,0,100])
 		
 	def send_command(self, command):
 		if self.port:
