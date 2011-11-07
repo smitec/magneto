@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+#40000 steps = 25cm
+#1step = 0.00625mm
+
 import serial
 
 class ISELController:
@@ -43,6 +46,13 @@ class ISELController:
 		self.y = y[0]
 		self.z = z[0]
 	
+	def move_rel_quick_mm(self, xmm, ymm, zmm):
+		self.relative_move(
+		[int(xmm/0.00625), 20000], 
+		[int(ymm/0.00625),10000], 
+		[int(zmm/0.00625),20000,0,100]
+		)
+	
 	def move_rel_quick(self, x, y, z):
 		self.relative_move([x, 20000], [y,10000], [z,20000,0,100])
 
@@ -85,8 +95,7 @@ class ISELController:
 		self.send_command("@0IR3")
 		self.send_command("@0IW")
 
-if __name__ == '__main__':
-	a = ISELController("/dev/tty.PL2303-00002006")
+def setup():
+	a = ISELController("/dev/tty.PL2303-00001004")
 	a.initialize()
-	a.move_rel_quick(-50000,-50000,-50000)
-	a.move_rel_quick(50000,50000,50000)
+	return a
