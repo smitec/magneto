@@ -41,6 +41,9 @@ class CNCControl:
 		self.btnClear = Button(self.controlFrame, text="Clear", command=self.clear_canvas)
 		self.btnClear.grid(row=0, column=3)
 		
+		self.btnClear = Button(self.controlFrame, text="Magic", command=self.do_magic)
+		self.btnClear.grid(row=0, column=4)
+		
 		#pack control Frame
 		self.controlFrame.grid(row = 1, column = 0)
 		
@@ -124,6 +127,9 @@ class CNCControl:
 			self.statusMessages["Isel"].set("Isel: Disconnected")
 		else:
 			self.statusMessages["Isel"].set("Isel: Connected")
+			
+	def do_magic():
+		
 		
 if __name__ == "__main__":
 	root = Tk()

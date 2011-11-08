@@ -54,10 +54,10 @@ class ISELController:
 		)
 	
 	def move_rel_quick(self, x, y, z):
-		self.relative_move([x, 20000], [y,10000], [z,20000,0,100])
+		self.relative_move([x, 20000], [y,10000], [z,10000,0,100])
 
 	def move_abs_quick(self, x, y, z):
-		self.absolute_move([x, 20000], [y,10000], [z,20000,0,100])
+		self.absolute_move([x, 20000], [y,10000], [z,10000,0,100])
 		
 	def send_command(self, command):
 		if self.port:
@@ -92,10 +92,12 @@ class ISELController:
 	def write_mem_def(self):
 		self.send_command("@0IX")
 		self.send_command("@0d3000,3000,3000")
-		self.send_command("@0IR3")
+		self.send_command("@0IR7")
+		
 		self.send_command("@0IW")
+	#	self.send_command("@0ID7")
 
 def setup():
-	a = ISELController("/dev/tty.PL2303-00001004")
+	a = ISELController("/dev/tty.PL2303-00002006")
 	a.initialize()
 	return a
