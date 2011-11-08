@@ -9,7 +9,10 @@ class ISELController:
 	#written for imc-p3-1
 	def __init__(self, comPort):
 		self.comPort = comPort
-		self.port = serial.Serial(comPort,19200)
+		try:
+			self.port = serial.Serial(comPort,19200)
+		else:
+			self.port = None
 		self.x = 0
 		self.y = 0
 		self.z = 0
