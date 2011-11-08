@@ -13,6 +13,7 @@ class CNCControl:
 		self.canvasItems = []
 		self.scope = None
 		self.func = None
+		self.IselController = None
 		
 		#everything to the right of the sidebar
 		self.mainFrame = Frame(frame)
@@ -54,6 +55,9 @@ class CNCControl:
 		#sidebar frame
 		self.sideBarFrame = Frame(frame)
 		
+		#port selector
+		self.entryPort = Entry(self.sideBarFrame)
+		
 		#equipement status labels
 		#variables that can be updated to change the labels
 		self.statusMessages = {
@@ -66,20 +70,38 @@ class CNCControl:
 		self.lblFunc = Label(self.sideBarFrame, textvariable=self.statusMessages["Func"])
 		self.lblIsel = Label(self.sideBarFrame, textvariable=self.statusMessages["Isel"])
 		
+		# xyz move
+		self.entryX = Entry(self.sideBarFrame)
+		self.entryY = Entry(self.sideBarFrame)
+		self.entryZ = Entry(self.sideBarFrame)
+		self.btnMove = Button(self.sideBarFrame, text="Move to x,y,z", command=self.move_abs)
+		
 		#connect button for scope and func
 		self.btnConnectRigol = Button(self.sideBarFrame, text="Connect to Rigol", command=self.rigol_connect)
 		
 		#connect button for isel
 		self.btnConnectIsel = Button(self.sideBarFrame, text="Connect to Isel", command=self.isel_connect)
 		
-		self.lblScope.grid(row=0)
-		self.lblFunc.grid(row=1)
-		self.lblIsel.grid(row=2)
+		#init button for isel
+		self.btnInitialize = Button(self.sideBarFrame, text="Initialize Isel", command=self.isel_initialize)
 		
-		self.btnConnectRigol.grid(row=3)
-		self.btnConnectIsel.grid(row=4)
+		self.entryPort.grid(row=0)
+		self.lblScope.grid(row=1)
+		self.lblFunc.grid(row=2)
+		self.lblIsel.grid(row=3)
+		self.btnInitialize.grid(row=4)
+		self.entryX.grid(row=7)
+		self.entryY.grid(row=8)
+		self.entryZ.grid(row=9)
+		self.btnMove.grid(row=10)
+		
+		self.btnConnectRigol.grid(row=5)
+		self.btnConnectIsel.grid(row=6)
 		
 		self.sideBarFrame.grid(row = 0, column = 1)
+		
+		# initial port setup
+		self.entryPort.insert(0, "/dev/tty.PL2303-00002006")
 		
 	def draw(self):
 		#all coords are flipped
@@ -121,7 +143,7 @@ class CNCControl:
 	
 	def isel_connect(self):
 		#todo make this a variable
-		self.IselController = isel.ISELController("/dev/tty.PL2303-00002006")
+		self.IselController = isel.ISELController(self.entryPort.get())
 		
 		if not (self.IselController.port):
 			tkMessageBox.showinfo(message="Couldn't Find Isel Controller, Conect and Try Again")
@@ -146,6 +168,22 @@ class CNCControl:
 					f.write("%f,%f\n" % (i*tim,ch[i][k])
 				f.close()
 			f = f + (20000-100)/20
+		
+	def move_abs(self):
+		x = self.entryX.get()
+		y = self.entryY.get()
+		z = self.entryZ.get()
+		
+		if self.IselController:
+			self.IselController.move_abs_quick([x, 5000], [y, 5000], [0, 5000, 0, 5000])
+		else:
+			tkMessageBox.showinfo(message="Isel not connected")
+		
+	def isel_initialize(self):
+		if self.IselController:
+			self.IselController.initialize()
+		else:
+			tkMessageBox.showinfo(message="Isel not connected")
 		
 if __name__ == "__main__":
 	root = Tk()
