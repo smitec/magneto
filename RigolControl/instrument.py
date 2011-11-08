@@ -124,6 +124,14 @@ class RigolDSE1000:
 			scale, probe, offset = float(res[0]), float(res[1]), float(res[2])
 			return [(scale + offset)*probe, (scale + offset)*probe*255]
 	
+	def get_time_info(self):
+		self.instrument.write(":TIM:SCAL?")
+		s = '*'
+		while s[0] == '*':
+			self.instrument.write(":TIM:SCAL?")
+			s = self.instrument.read(20)
+		return float(s)
+		
 	def get_waveform(self, channel, mode = "NOR"):
 		self.instrument.write(":TIMEBASE:SCALE %f" % float(50e-6))
 		time.sleep(3)
@@ -144,6 +152,12 @@ class RigolDSE1000:
 
 	def send_reset(self):
 		self.instrument.write("*RST")
+		
+	def run(self):
+		self.instrument.write(":RUN")
+	
+	def stop(self):
+		self.instrument.write(":STOP")
 		
 
 def find_instruments():

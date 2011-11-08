@@ -2,6 +2,7 @@ from Tkinter import *
 import tkMessageBox
 import iselControl as isel
 import RigolControl.instrument as instrument
+import time
 
 class CNCControl:
 	
@@ -128,8 +129,23 @@ class CNCControl:
 		else:
 			self.statusMessages["Isel"].set("Isel: Connected")
 			
-	def do_magic():
-		
+	def do_magic(self):
+		f = 100
+		while (f < 20000):
+			self.func.sin_out(f,0,1,0)
+			time.sleep(2)
+			self.scope.autoset()
+			self.scope.stop()
+			os.system("mkdir -p ./output")
+			for i in range(2):
+				ch = self.scope.get_waveform(i)
+				vol = self.scope.get_voltage_info(i)
+				tim = self.scope.get_time_info(i)
+				f = open("./output/f_%i_c_%i.csv" % (f, i+1))
+				for k in range(len(ch[i])):
+					f.write("%f,%f\n" % (i*tim,ch[i][k])
+				f.close()
+			f = f + (20000-100)/20
 		
 if __name__ == "__main__":
 	root = Tk()
