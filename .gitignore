@@ -1,2 +1,5 @@
 *.pyc
 .DS_Store
+c-sharp/magneto/magneto/bin
+c-sharp/magneto/magneto/obj
+c-sharp/magneto/magneto/Properties
