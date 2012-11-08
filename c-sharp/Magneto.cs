@@ -1,15 +1,15 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO.Ports;
 
-namespace magneto
+namespace Magneto
 {
     public class iselController
     {
         SerialPort port;
-        int axes;
+        public int axes;
 
         public iselController(string port_name, int axes)
         {
@@ -31,7 +31,7 @@ namespace magneto
             {
                 this.send_command("@07");
             }
-            
+
             this.send_command("@0IX");
             this.send_command("@0d3000,3000,3000");
             this.send_command("@0IR7");
@@ -40,7 +40,7 @@ namespace magneto
             return true;
         }
 
-        bool reference(int axes)
+        public bool reference(int axes)
         {
             if (axes == 1)
             {
@@ -59,7 +59,7 @@ namespace magneto
             this.port.Write(command + "\r");
             char c = (char)this.port.ReadChar();
             Dictionary<char, string> returnCodes = new Dictionary<char, string>();
-            
+
             returnCodes.Add('0', "Okay");
             returnCodes.Add('1', "Error in numeric value");
             returnCodes.Add('2', "Limit switch triggered, run reference");
@@ -75,7 +75,7 @@ namespace magneto
             returnCodes.Add('G', "Invalid Data Field");
             returnCodes.Add('H', "Cover Open");
             returnCodes.Add('R', "Reference Error, run reference");
-            
+
             return returnCodes[c];
         }
 
@@ -88,6 +88,33 @@ namespace magneto
             string command = "@0A " + x.ToString() + ",5000," + y.ToString() + ",5000," + z.ToString() + ",5000,0,100";
             this.send_command(command);
             return true;
+        }
+
+        public bool move_abs_steps(long x, long y, long z)
+        {
+            if (this.axes == 1)
+            {
+                y = z = 0;
+            }
+            string command = "@0M " + x.ToString() + ",5000," + y.ToString() + ",5000," + z.ToString() + ",5000,0,100";
+            this.send_command(command);
+            return true;
+        }
+
+        public bool move_abs_mm(double x, double y, double z)
+        {
+            if (this.axes == 1)
+            {
+                y = z = 0;
+            }
+
+            long xs, ys, zs;
+
+            xs = mm_to_steps(x);
+            ys = mm_to_steps(y);
+            zs = mm_to_steps(z);
+
+            return this.move_abs_steps(xs, ys, zs);
         }
 
         public bool move_rel_mm(double x, double y, double z)
