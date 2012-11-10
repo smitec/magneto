@@ -80,6 +80,7 @@
             this.lineShape3 = new Microsoft.VisualBasic.PowerPacks.LineShape();
             this.lineShape2 = new Microsoft.VisualBasic.PowerPacks.LineShape();
             this.lineShape1 = new Microsoft.VisualBasic.PowerPacks.LineShape();
+            this.button1 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -388,6 +389,7 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.button1);
             this.groupBox4.Controls.Add(this.label19);
             this.groupBox4.Controls.Add(this.btnStopTrapezoid);
             this.groupBox4.Controls.Add(this.btnStartTrapezoid);
@@ -408,7 +410,7 @@
             this.groupBox4.Controls.Add(this.shapeContainer1);
             this.groupBox4.Location = new System.Drawing.Point(13, 173);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(203, 299);
+            this.groupBox4.Size = new System.Drawing.Size(203, 330);
             this.groupBox4.TabIndex = 3;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Trapezoid Paramters";
@@ -424,7 +426,7 @@
             // 
             // btnStopTrapezoid
             // 
-            this.btnStopTrapezoid.Location = new System.Drawing.Point(103, 252);
+            this.btnStopTrapezoid.Location = new System.Drawing.Point(103, 289);
             this.btnStopTrapezoid.Name = "btnStopTrapezoid";
             this.btnStopTrapezoid.Size = new System.Drawing.Size(91, 35);
             this.btnStopTrapezoid.TabIndex = 16;
@@ -434,7 +436,7 @@
             // 
             // btnStartTrapezoid
             // 
-            this.btnStartTrapezoid.Location = new System.Drawing.Point(6, 252);
+            this.btnStartTrapezoid.Location = new System.Drawing.Point(6, 289);
             this.btnStartTrapezoid.Name = "btnStartTrapezoid";
             this.btnStartTrapezoid.Size = new System.Drawing.Size(91, 35);
             this.btnStartTrapezoid.TabIndex = 15;
@@ -573,7 +575,7 @@
             this.lineShape3,
             this.lineShape2,
             this.lineShape1});
-            this.shapeContainer1.Size = new System.Drawing.Size(197, 280);
+            this.shapeContainer1.Size = new System.Drawing.Size(197, 311);
             this.shapeContainer1.TabIndex = 8;
             this.shapeContainer1.TabStop = false;
             // 
@@ -609,11 +611,21 @@
             this.lineShape1.Y1 = 165;
             this.lineShape1.Y2 = 165;
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(6, 260);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(188, 23);
+            this.button1.TabIndex = 18;
+            this.button1.Text = "Load CSV File";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // HectorApp
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(653, 487);
+            this.ClientSize = new System.Drawing.Size(653, 515);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
@@ -687,6 +699,7 @@
         private Microsoft.VisualBasic.PowerPacks.LineShape lineShape2;
         private Microsoft.VisualBasic.PowerPacks.LineShape lineShape1;
         private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.Button button1;
     }
 }
 

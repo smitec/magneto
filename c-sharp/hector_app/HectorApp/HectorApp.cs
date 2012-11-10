@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.IO.Ports;
+using System.IO;
 using Magneto;
 using NationalInstruments.DAQmx;
 using NationalInstruments;
@@ -17,7 +18,7 @@ namespace HectorApp
     {
 
         iselController isc;
-        Task trapezoid_output, pulse_output;
+        Task data_output, pulse_output;
         double current_x = 0, current_y = 0, current_z = 0;
         bool init = true;
 
@@ -128,6 +129,26 @@ namespace HectorApp
             update_positions();
         }
 
+        public static double[] GenerateTri(double time, double start, double sampleRate, double amp)
+        {
+            double[] tri = new double[(int)(time*sampleRate)];
+
+
+            for (int i = 0; i < (int)(time*sampleRate); i++)
+            {
+                if (i > start * sampleRate)
+                {
+                    tri[i] = (2*amp / ((time - start)*sampleRate) *(i - start*(sampleRate))) - amp;
+                }
+                else
+                {
+                    tri[i] = -amp;
+                }
+            }
+
+            return tri;
+        }
+
         public static double[] GenerateTrapezoid(
             double lowTime,
             double riseTime,
@@ -140,7 +161,8 @@ namespace HectorApp
             double deltaT = 1 / sampleClockRate;
             int intSamplesPerBuffer = (int)samplesPerBuffer;
 
-            double[] rVal = new double[intSamplesPerBuffer*2];
+            double[] rVal = new double[intSamplesPerBuffer];
+
             int j = 0;
             double step = 0;
             //low
@@ -161,7 +183,7 @@ namespace HectorApp
             for (int i = 0; i < (int)(fallTime / deltaT); i++)
                 rVal[i + j] = amplitude - i * step;
 
-
+            /*
             //NEGATIVE TRAP
             amplitude *= -1;
             //low
@@ -181,6 +203,7 @@ namespace HectorApp
             step = amplitude / (fallTime / deltaT);
             for (int i = 0; i < (int)(fallTime / deltaT); i++)
                 rVal[i + j] = amplitude - i * step;
+            */
 
             return rVal;
         }
@@ -205,36 +228,127 @@ namespace HectorApp
             double fall = Convert.ToDouble(txtTrapFall.Text.ToString())/1000;
             double volts = Convert.ToDouble(txtTrapV.Text.ToString());
 
-            trapezoid_output = new Task();
-            trapezoid_output.AOChannels.CreateVoltageChannel("/Dev1/ao0", "", -1*volts, volts, AOVoltageUnits.Volts);
+            data_output = new Task();
+            data_output.AOChannels.CreateVoltageChannel("/Dev1/ao1", "", -1 * volts, volts, AOVoltageUnits.Volts);
+            data_output.AOChannels.CreateVoltageChannel("/Dev1/ao0", "", -10, 10, AOVoltageUnits.Volts);
 
             pulse_output = new Task();
             pulse_output.DOChannels.CreateChannel("Dev1/port0/line0", "", ChannelLineGrouping.OneChannelForAllLines);
 
             // configure the sample rates
-            trapezoid_output.Timing.ConfigureSampleClock("", 10000, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples, 1000);
+            data_output.Timing.ConfigureSampleClock("", 10000, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples, 1000);
             pulse_output.Timing.ConfigureSampleClock("/Dev1/ao/SampleClock", 10000, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples, 1000);
 
             // write the analog data
             double total = low + rise + high + fall;
             double[] trapezoid = GenerateTrapezoid(low, rise, high, fall, volts, 10000, total * 10000);
-          
-            AnalogSingleChannelWriter w = new AnalogSingleChannelWriter(trapezoid_output.Stream);
-            w.WriteMultiSample(false, trapezoid);
+            double[] tri = GenerateTri(total, low, 10000, 10);
+
+            double[,] comb = new double[2,(int)(total*10000)];
+
+            for (int i = 0; i < (int)(total*10000); i++) {
+                comb[0,i] = trapezoid[i];
+                comb[1,i] = tri[i];
+            }
+
+            AnalogMultiChannelWriter ww = new AnalogMultiChannelWriter(data_output.Stream);
+            ww.WriteMultiSample(false, comb);
 
             DigitalWaveform wfm = new DigitalWaveform(trapezoid.Length, 1);
             DigitalSingleChannelWriter d = new DigitalSingleChannelWriter(pulse_output.Stream);
             d.WriteWaveform(false, generate_pulse(trapezoid, volts));
 
             pulse_output.Start();
-            trapezoid_output.Start();
+            data_output.Start();
+
         }
 
         private void btnStopTrapezoid_Click(object sender, EventArgs e)
         {
-            trapezoid_output.Dispose();
+            data_output.Dispose();
             pulse_output.Dispose();
 
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            double volts = Convert.ToDouble(txtTrapV.Text.ToString());
+
+            data_output = new Task();
+            data_output.AOChannels.CreateVoltageChannel("/Dev1/ao0", "", -1 * 5, 5, AOVoltageUnits.Volts);
+
+            pulse_output = new Task();
+            pulse_output.DOChannels.CreateChannel("Dev1/port0/line0", "", ChannelLineGrouping.OneChannelForAllLines);
+
+            // configure the sample rates
+            data_output.Timing.ConfigureSampleClock("", 10000, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples, 1000);
+            pulse_output.Timing.ConfigureSampleClock("/Dev1/ao/SampleClock", 10000, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples, 1000);
+
+            // write the analog data
+            //Select a file
+            OpenFileDialog openFileDialog1 = new OpenFileDialog();
+            string filename;
+
+            openFileDialog1.InitialDirectory = "c:\\" ;
+            openFileDialog1.Filter = "csv files (*.csv)|*.txt|All files (*.*)|*.*" ;
+            openFileDialog1.FilterIndex = 2 ;
+            openFileDialog1.RestoreDirectory = true ;
+
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                filename = openFileDialog1.FileName;
+
+
+                String[] values = File.ReadAllLines(filename);
+                String[,] lines = new String[values.Length,2];
+
+                for (int i = 0; i < values.Length; i++)
+                {
+                    lines[i,0] = values[i].Split(',')[0];
+                    lines[i, 1] = values[i].Split(',')[1];
+                }
+
+                //loop through the values interpolating if needed
+                double maxTime = double.Parse(lines[values.Length - 1,0])/1000.0;
+
+                double[] data = new double[(int)(maxTime * 10000)];
+
+                data[0] = 0.0;
+                int last = -1; //last index used
+                double time, val, diffV, diffT;
+
+                for (int i = 0; i < lines.Length/2; i++)
+                {
+                    time = double.Parse(lines[i,0])/1000.0;
+                    val = double.Parse(lines[i,1])/2.5; //amps to volts
+                    //interpolate
+                    for (int j = last + 1; j < (int)(time * 10000); j++)
+                    {
+                        diffV = (val - data[last]);
+                        diffT = (time * 10000 - (last + 1));
+
+                        data[j] = ( diffV / diffT ) * (j - last)  + data[last];
+                    }
+                    last = (int)(time * 10000) - 1;
+
+                    if (last < 0)
+                    {
+                        last = 0;
+                    }
+
+                }
+
+
+                AnalogSingleChannelWriter w = new AnalogSingleChannelWriter(data_output.Stream);
+                w.WriteMultiSample(false, data);
+
+                DigitalWaveform wfm = new DigitalWaveform(data.Length, 1);
+                DigitalSingleChannelWriter d = new DigitalSingleChannelWriter(pulse_output.Stream);
+                d.WriteWaveform(false, generate_pulse(data, volts));
+
+                pulse_output.Start();
+                data_output.Start();
+            }
         }
     }
 }
