@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO.Ports;
 using System.IO;
+using System.Threading;
 using Magneto;
 using NationalInstruments.DAQmx;
 using NationalInstruments;
@@ -18,8 +19,8 @@ namespace HectorApp
     {
 
         iselController isc;
-        Task data_output, pulse_output;
-        double current_x = 0, current_y = 0, current_z = 0;
+        Task data_output, pulse_output, recording_task;
+        double current_x = 0, current_y = 0, current_z = 0, voltage = 1, pulse_spacing = 0.050;
         bool init = true;
 
         public HectorApp()
@@ -229,7 +230,7 @@ namespace HectorApp
             double volts = Convert.ToDouble(txtTrapV.Text.ToString());
 
             data_output = new Task();
-            data_output.AOChannels.CreateVoltageChannel("/Dev1/ao1", "", -1 * volts, volts, AOVoltageUnits.Volts);
+            data_output.AOChannels.CreateVoltageChannel("/Dev1/ao1", "", 0, volts, AOVoltageUnits.Volts);
             data_output.AOChannels.CreateVoltageChannel("/Dev1/ao0", "", -10, 10, AOVoltageUnits.Volts);
 
             pulse_output = new Task();
@@ -275,7 +276,8 @@ namespace HectorApp
             double volts = Convert.ToDouble(txtTrapV.Text.ToString());
 
             data_output = new Task();
-            data_output.AOChannels.CreateVoltageChannel("/Dev1/ao0", "", -1 * 5, 5, AOVoltageUnits.Volts);
+            data_output.AOChannels.CreateVoltageChannel("/Dev1/ao1", "", -10, 10, AOVoltageUnits.Volts);
+            data_output.AOChannels.CreateVoltageChannel("/Dev1/ao0", "", 0, voltage, AOVoltageUnits.Volts);
 
             pulse_output = new Task();
             pulse_output.DOChannels.CreateChannel("Dev1/port0/line0", "", ChannelLineGrouping.OneChannelForAllLines);
@@ -285,69 +287,95 @@ namespace HectorApp
             pulse_output.Timing.ConfigureSampleClock("/Dev1/ao/SampleClock", 10000, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples, 1000);
 
             // write the analog data
-            //Select a file
-            OpenFileDialog openFileDialog1 = new OpenFileDialog();
-            string filename;
+            string filename = txtFolder.Text + "\\config\\pulse.csv";
+            double val = 0;
 
-            openFileDialog1.InitialDirectory = "c:\\" ;
-            openFileDialog1.Filter = "csv files (*.csv)|*.txt|All files (*.*)|*.*" ;
-            openFileDialog1.FilterIndex = 2 ;
-            openFileDialog1.RestoreDirectory = true ;
+            String[] values = File.ReadAllText(filename).Split(',');
 
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            //loop through the values interpolating if needed
+
+            double[] data = new double[(int)((pulse_spacing * 10000) + values.Length)];
+
+            data[0] = 0.0;
+
+            for (int i = 0; i < (int)(pulse_spacing * 10000); i++)
             {
-                filename = openFileDialog1.FileName;
+                data[i] = 0;
+            }
 
+            for (int i = 0; i < values.Length; i++)
+            {
+                val = double.Parse(values[i]);
 
-                String[] values = File.ReadAllLines(filename);
-                String[,] lines = new String[values.Length,2];
+                data[i + (int)(10000 * pulse_spacing)] = val;
 
-                for (int i = 0; i < values.Length; i++)
+            }
+
+            double[] tri = GenerateTri(pulse_spacing + (values.Length/10000.0), pulse_spacing, 10000, 10);
+            double[,] comb = new double[2, (int)((pulse_spacing * 10000) + values.Length)];
+
+            for (int i = 0; i < (int)(pulse_spacing * 10000) + values.Length; i++)
+            {
+                comb[0, i] = tri[i];
+                comb[1, i] = data[i];
+            }
+
+            AnalogMultiChannelWriter ww = new AnalogMultiChannelWriter(data_output.Stream);
+            ww.WriteMultiSample(false, comb);
+
+            DigitalWaveform wfm = new DigitalWaveform(data.Length, 1);
+            DigitalSingleChannelWriter d = new DigitalSingleChannelWriter(pulse_output.Stream);
+            d.WriteWaveform(false, generate_pulse(data, volts));
+
+            pulse_output.Start();
+            data_output.Start();
+
+            record_channels(txtFolder.Text + "/output/", 1000, 1);
+
+            MessageBox.Show("Done");
+        }
+
+        private void record_channels(string foldername, int samples, int recordings)
+        {
+            Task myTaskIn = new Task();
+            //ramp
+            myTaskIn.AIChannels.CreateVoltageChannel("Dev1/ai0", "", AITerminalConfiguration.Rse, -10, 10, AIVoltageUnits.Volts);
+            //out
+            myTaskIn.AIChannels.CreateVoltageChannel("Dev1/ai1", "", AITerminalConfiguration.Rse, -10, 10, AIVoltageUnits.Volts);
+            //in
+            myTaskIn.AIChannels.CreateVoltageChannel("Dev1/ai2", "", AITerminalConfiguration.Rse, -10, 10, AIVoltageUnits.Volts);
+
+            myTaskIn.Timing.ConfigureSampleClock("", 10000, SampleClockActiveEdge.Rising, SampleQuantityMode.FiniteSamples, samples);
+            myTaskIn.Stream.Timeout = 20000;
+            AnalogMultiChannelReader r = new AnalogMultiChannelReader(myTaskIn.Stream);
+
+            double[,] data;
+
+            for (int u = 0; u <= recordings; u++)
+            {
+                Thread.Sleep(samples / 10);
+                data = r.ReadMultiSample(samples);
+
+                TextWriter tx = new StreamWriter(foldername + u.ToString() + ".csv");
+                tx.Write("Ramp,Output,Sensor\n");
+                for (int i = 0; i < samples; i++)
                 {
-                    lines[i,0] = values[i].Split(',')[0];
-                    lines[i, 1] = values[i].Split(',')[1];
+                    tx.Write(data[0, i].ToString() + "," + data[1, i].ToString() + "," + data[2, i].ToString() + "\n");
                 }
 
-                //loop through the values interpolating if needed
-                double maxTime = double.Parse(lines[values.Length - 1,0])/1000.0;
+                tx.Close();
 
-                double[] data = new double[(int)(maxTime * 10000)];
+            }
+            myTaskIn.Dispose();
+        }
 
-                data[0] = 0.0;
-                int last = -1; //last index used
-                double time, val, diffV, diffT;
+        private void button2_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog fd = new FolderBrowserDialog();
 
-                for (int i = 0; i < lines.Length/2; i++)
-                {
-                    time = double.Parse(lines[i,0])/1000.0;
-                    val = double.Parse(lines[i,1])/2.5; //amps to volts
-                    //interpolate
-                    for (int j = last + 1; j < (int)(time * 10000); j++)
-                    {
-                        diffV = (val - data[last]);
-                        diffT = (time * 10000 - (last + 1));
-
-                        data[j] = ( diffV / diffT ) * (j - last)  + data[last];
-                    }
-                    last = (int)(time * 10000) - 1;
-
-                    if (last < 0)
-                    {
-                        last = 0;
-                    }
-
-                }
-
-
-                AnalogSingleChannelWriter w = new AnalogSingleChannelWriter(data_output.Stream);
-                w.WriteMultiSample(false, data);
-
-                DigitalWaveform wfm = new DigitalWaveform(data.Length, 1);
-                DigitalSingleChannelWriter d = new DigitalSingleChannelWriter(pulse_output.Stream);
-                d.WriteWaveform(false, generate_pulse(data, volts));
-
-                pulse_output.Start();
-                data_output.Start();
+            if (fd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                txtFolder.Text = fd.SelectedPath;
             }
         }
     }

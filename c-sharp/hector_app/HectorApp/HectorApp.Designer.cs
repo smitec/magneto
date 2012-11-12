@@ -58,6 +58,7 @@
             this.rdo2Axis = new System.Windows.Forms.RadioButton();
             this.rdo1Axis = new System.Windows.Forms.RadioButton();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.btnLoad = new System.Windows.Forms.Button();
             this.label19 = new System.Windows.Forms.Label();
             this.btnStopTrapezoid = new System.Windows.Forms.Button();
             this.btnStartTrapezoid = new System.Windows.Forms.Button();
@@ -80,11 +81,18 @@
             this.lineShape3 = new Microsoft.VisualBasic.PowerPacks.LineShape();
             this.lineShape2 = new Microsoft.VisualBasic.PowerPacks.LineShape();
             this.lineShape1 = new Microsoft.VisualBasic.PowerPacks.LineShape();
-            this.button1 = new System.Windows.Forms.Button();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.button2 = new System.Windows.Forms.Button();
+            this.txtFolder = new System.Windows.Forms.TextBox();
+            this.label20 = new System.Windows.Forms.Label();
+            this.btnTestPulse = new System.Windows.Forms.Button();
+            this.btnRun = new System.Windows.Forms.Button();
+            this.prgexp = new System.Windows.Forms.ProgressBar();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
+            this.groupBox5.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
@@ -389,7 +397,6 @@
             // 
             // groupBox4
             // 
-            this.groupBox4.Controls.Add(this.button1);
             this.groupBox4.Controls.Add(this.label19);
             this.groupBox4.Controls.Add(this.btnStopTrapezoid);
             this.groupBox4.Controls.Add(this.btnStartTrapezoid);
@@ -414,6 +421,16 @@
             this.groupBox4.TabIndex = 3;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Trapezoid Paramters";
+            // 
+            // btnLoad
+            // 
+            this.btnLoad.Location = new System.Drawing.Point(291, 50);
+            this.btnLoad.Name = "btnLoad";
+            this.btnLoad.Size = new System.Drawing.Size(120, 23);
+            this.btnLoad.TabIndex = 18;
+            this.btnLoad.Text = "Load";
+            this.btnLoad.UseVisualStyleBackColor = true;
+            this.btnLoad.Click += new System.EventHandler(this.button1_Click);
             // 
             // label19
             // 
@@ -611,21 +628,80 @@
             this.lineShape1.Y1 = 165;
             this.lineShape1.Y2 = 165;
             // 
-            // button1
+            // groupBox5
             // 
-            this.button1.Location = new System.Drawing.Point(6, 260);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(188, 23);
-            this.button1.TabIndex = 18;
-            this.button1.Text = "Load CSV File";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.groupBox5.Controls.Add(this.prgexp);
+            this.groupBox5.Controls.Add(this.btnRun);
+            this.groupBox5.Controls.Add(this.btnTestPulse);
+            this.groupBox5.Controls.Add(this.btnLoad);
+            this.groupBox5.Controls.Add(this.label20);
+            this.groupBox5.Controls.Add(this.txtFolder);
+            this.groupBox5.Controls.Add(this.button2);
+            this.groupBox5.Location = new System.Drawing.Point(219, 173);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Size = new System.Drawing.Size(421, 151);
+            this.groupBox5.TabIndex = 4;
+            this.groupBox5.TabStop = false;
+            this.groupBox5.Text = "Load Experiment";
+            // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(381, 22);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(30, 23);
+            this.button2.TabIndex = 0;
+            this.button2.Text = "...";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
+            // 
+            // txtFolder
+            // 
+            this.txtFolder.Location = new System.Drawing.Point(107, 24);
+            this.txtFolder.Name = "txtFolder";
+            this.txtFolder.Size = new System.Drawing.Size(268, 20);
+            this.txtFolder.TabIndex = 1;
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(7, 27);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(94, 13);
+            this.label20.TabIndex = 4;
+            this.label20.Text = "Experiment Folder:";
+            // 
+            // btnTestPulse
+            // 
+            this.btnTestPulse.Location = new System.Drawing.Point(165, 108);
+            this.btnTestPulse.Name = "btnTestPulse";
+            this.btnTestPulse.Size = new System.Drawing.Size(120, 23);
+            this.btnTestPulse.TabIndex = 19;
+            this.btnTestPulse.Text = "Test Pulse";
+            this.btnTestPulse.UseVisualStyleBackColor = true;
+            this.btnTestPulse.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // btnRun
+            // 
+            this.btnRun.Location = new System.Drawing.Point(291, 108);
+            this.btnRun.Name = "btnRun";
+            this.btnRun.Size = new System.Drawing.Size(120, 23);
+            this.btnRun.TabIndex = 20;
+            this.btnRun.Text = "Run";
+            this.btnRun.UseVisualStyleBackColor = true;
+            // 
+            // prgexp
+            // 
+            this.prgexp.Location = new System.Drawing.Point(11, 79);
+            this.prgexp.Name = "prgexp";
+            this.prgexp.Size = new System.Drawing.Size(400, 23);
+            this.prgexp.TabIndex = 21;
             // 
             // HectorApp
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(653, 515);
+            this.Controls.Add(this.groupBox5);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
@@ -641,6 +717,8 @@
             this.groupBox3.PerformLayout();
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
+            this.groupBox5.ResumeLayout(false);
+            this.groupBox5.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -699,7 +777,14 @@
         private Microsoft.VisualBasic.PowerPacks.LineShape lineShape2;
         private Microsoft.VisualBasic.PowerPacks.LineShape lineShape1;
         private System.Windows.Forms.Label label19;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button btnLoad;
+        private System.Windows.Forms.GroupBox groupBox5;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.TextBox txtFolder;
+        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.ProgressBar prgexp;
+        private System.Windows.Forms.Button btnRun;
+        private System.Windows.Forms.Button btnTestPulse;
     }
 }
 
