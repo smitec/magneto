@@ -351,16 +351,16 @@ namespace HectorApp
 
             double[,] data;
 
-            for (int u = 0; u <= recordings; u++)
+            for (int u = 0; u < recordings; u++)
             {
                 Thread.Sleep(samples / 10);
                 data = r.ReadMultiSample(samples);
 
                 TextWriter tx = new StreamWriter(foldername + u.ToString() + ".csv");
-                tx.Write("Ramp,Output,Sensor\n");
+                tx.Write("Sample,Ramp,Output,Sensor\n");
                 for (int i = 0; i < samples; i++)
                 {
-                    tx.Write(data[0, i].ToString() + "," + data[1, i].ToString() + "," + data[2, i].ToString() + "\n");
+                    tx.Write(i + "," + data[0, i].ToString() + "," + data[1, i].ToString() + "," + data[2, i].ToString() + "\n");
                 }
 
                 tx.Close();
