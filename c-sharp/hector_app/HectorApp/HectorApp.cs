@@ -378,5 +378,88 @@ namespace HectorApp
                 txtFolder.Text = fd.SelectedPath;
             }
         }
+
+        //first letter is across second is down
+        int TYPE_XY = 0;
+        int TYPE_YZ = 1;
+        int TYPE_ZX = 2;
+
+        private void sample_reactangle(double[] topLeft, double[] bottomRight, int steps, int type, int avgFac) {
+            //open connection to ftdi
+
+
+            TextWriter tx = new StreamWriter("./plane.csv");
+            tx.Write("Point x,Point y,Point z,Field x, Field y, field z\n");
+
+            double xpos, ypos, zpos;
+            double xstep, ystep, zsetp;
+            double xfield, yfield, zfield;
+
+            xpos = topLeft[0];
+            ypos = topLeft[1];
+            zpos = topLeft[2];
+
+            //move to the top left
+            this.move_abs_mm(xpos, ypos, 0);
+            this.move_abs_mm(xpos, ypos, zpos);
+
+            xpos = bottomRight[0] - topLeft[0];
+            ypos = bottomRight[0] - topLeft[1];
+            zpos = bottomRight[0] - topLeft[2];
+
+            xpos /= steps;
+            ypos /= steps;
+            zpos /= steps;
+
+            for (int across = 0; across < steps; across++) {
+
+                for (int down = 0; down < steps; down++) {
+                    this.move_abs_mm(xpos, ypos, zpos);
+
+                    //take samples
+                    for (int i = 0; i < avgFac; i++) {
+
+                    }
+                    xfield /= avgFac;
+                    yfield /= avgFac;
+                    zfield /= avgFac;
+
+
+
+                    //tx.Write("Point x,Point y,Point z,Field x, Field y, field z\n");
+                    tx.Write(xpos + "," + ypos + "," + zpos + "," + xfield + "," + yfield + "," + zfield + "\n");
+
+
+                    //move down one
+                    switch (type) {
+                    case TYPE_XY:
+                        ypos += ystep;
+                        break;
+                    case TYPE_ZX:
+                        xpos += xstep;
+                        break;
+                    case TYPE_YZ:
+                        zpos += zstep;
+                        break;
+                };
+
+                }
+                // move across one
+                switch (type) {
+                    case TYPE_XY:
+                        xpos += xstep;
+                        break;
+                    case TYPE_ZX:
+                        zpos += zstep;
+                        break;
+                    case TYPE_YZ:
+                        ypos += ystep;
+                        break;
+                };
+            }
+
+            this.move_abs_mm(xpos, ypos, 0);
+            this.move_abs_mm(0, 0, 0);
+        }
     }
 }
