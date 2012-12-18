@@ -26,7 +26,8 @@ class RigolDG3000:
 		self.instrument.write("SYST:LOC")
 		
 	def sin_out(self, freq, amp, offset):
-		self.instrument.write("APPL:SIN:CH1 %i,%.2f,%.2f" % (freq, amp, offset))
+		self.instrument.write("APPL:SIN %i,%.2f,%.2f" % (freq, amp, offset))
+		self.instrument.write("OUTP ON")
 	
 	def make_arb(self, volt):
 		comms = [
@@ -197,3 +198,12 @@ def find_instruments():
 		#sys.exit(1)
 
 	return RigolDSE1000(scope), RigolDG3000(funcgen)
+	
+def sweep(num):
+	a = RigolDG3000(usbtmc("/dev/usbtmc" + str(num)))
+	bk = 20
+	for dec in range(1, 4):
+		for pt in [(10**(1+dec))*(i/(1.0*bk)) for i in range(3,bk+1)]:
+			a.sin_out(pt, 0.4, 0)
+			time.sleep(5)
+	

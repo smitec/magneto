@@ -4,6 +4,7 @@
 #1step = 0.00625mm
 
 import serial
+import time
 
 class ISELController:
 	#written for imc-p3-1
@@ -11,7 +12,7 @@ class ISELController:
 		self.comPort = comPort
 		try:
 			self.port = serial.Serial(comPort,19200)
-		else:
+		except:
 			self.port = None
 		self.x = 0
 		self.y = 0
@@ -26,13 +27,13 @@ class ISELController:
 		return self.intialize()
 
 	def initialize(self):
-		self.send_command("@07") #Section 2.2.1
+		self.send_command("@01") #Section 2.2.1
 		self.write_mem_def()
 		self.reference()
 		
 	def reference(self):
 		#runs motors back to limit switch
-		self.send_command("@0R7") #section 2.2.22
+		self.send_command("@0R1") #section 2.2.22
 		self.x = 0
 		self.y = 0
 		self.z = 0
@@ -44,7 +45,8 @@ class ISELController:
 		self.z += z[0]
 
 	def absolute_move(self, x, y, z):
-		self.send_command("@0M " + ','.join([str(a) for a in x+y+[0,5000,0,5000]]))
+		#self.send_command("@0M " + ','.join([str(a) for a in [self.x,5000,self.y,5000,0,5000,0,5000]]))
+		#self.send_command("@0M " + ','.join([str(a) for a in x+y+[0,5000,0,5000]]))
 		self.send_command("@0M " + ','.join([str(a) for a in x+y+z]))
 		self.x = x[0]
 		self.y = y[0]
@@ -67,7 +69,8 @@ class ISELController:
 		if self.port:
 			print "Sending %s..." % command,
 			self.port.write(command+"\r")
-			c = self.port.read()
+			time.sleep(0.1)
+			c = self.port.read(1)
 			mess = {'0':"Okay",
 					'1':"Error in numeric value",
 					'2':"Limit switch triggered, run reference",

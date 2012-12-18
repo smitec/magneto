@@ -101,7 +101,7 @@ class CNCControl:
 		self.sideBarFrame.grid(row = 0, column = 1)
 		
 		# initial port setup
-		self.entryPort.insert(0, "/dev/tty.PL2303-00002006")
+		self.entryPort.insert(0, "/dev/tty.usbserial-FTUJ3XK8")
 		
 	def draw(self):
 		#all coords are flipped
@@ -163,19 +163,19 @@ class CNCControl:
 				ch = self.scope.get_waveform(i)
 				vol = self.scope.get_voltage_info(i)
 				tim = self.scope.get_time_info(i)
-				f = open("./output/f_%i_c_%i.csv" % (f, i+1))
+				fil = open("./output/f_%i_c_%i.csv" % (f, i+1))
 				for k in range(len(ch[i])):
-					f.write("%f,%f\n" % (i*tim,ch[i][k])
-				f.close()
+					fil.write("%f,%f\n" % (i*tim,ch[i][k]))
+				fil.close()
 			f = f + (20000-100)/20
 		
 	def move_abs(self):
-		x = self.entryX.get()
-		y = self.entryY.get()
-		z = self.entryZ.get()
+		x = -int(self.entryX.get())
+		y = -int(self.entryY.get())
+		z = int(self.entryZ.get())
 		
 		if self.IselController:
-			self.IselController.move_abs_quick([x, 5000], [y, 5000], [0, 5000, 0, 5000])
+			self.IselController.move_abs_quick(x, y, z)
 		else:
 			tkMessageBox.showinfo(message="Isel not connected")
 		
