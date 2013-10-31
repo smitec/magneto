@@ -295,6 +295,16 @@ namespace HectorApp
 
         private void button1_Click(object sender, EventArgs e)
         {
+
+            string json = @"{
+             'OutputFolder': './output',
+             'Type': 0,
+             'PointsFile': './p.csv',
+             'DataFile': './d.csv' 
+             }";
+
+            Experiments exp = Newtonsoft.Json.JsonConvert.DeserializeObject<Experiments>(json);
+
             double volts = Convert.ToDouble(txtTrapV.Text.ToString());
 
             data_output = new Task();
