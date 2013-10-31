@@ -280,6 +280,10 @@ namespace HectorApp
             pulse_output.Start();
             data_output.Start();
 
+            record_channels(txtFolder.Text + "/output/", (int) (total*10000), 5);
+
+            MessageBox.Show("Done");
+
         }
 
         private void btnStopTrapezoid_Click(object sender, EventArgs e)
@@ -367,23 +371,48 @@ namespace HectorApp
             myTaskIn.Stream.Timeout = 20000;
             AnalogMultiChannelReader r = new AnalogMultiChannelReader(myTaskIn.Stream);
 
+            int steps = 10000/20;
+
             double[,] data;
+
+            double[,] average = new double[steps,2]; //top row is data out , botom row data in
+            int[] average_count = new int[steps];
+
+            //TODO: characterize the amp
+
+
+            for (int i = 0; i < 10000 / 20; i++)
+            {
+                average[i, 0] = 0;
+                average[i, 1] = 0;
+                average_count[i] = 0;
+            }
 
             for (int u = 0; u < recordings; u++)
             {
                 Thread.Sleep(samples / 10);
                 data = r.ReadMultiSample(samples);
 
-                TextWriter tx = new StreamWriter(foldername + u.ToString() + ".csv");
-                tx.Write("Sample,Ramp,Output,Sensor\n");
+                //place the sample in the right place
                 for (int i = 0; i < samples; i++)
                 {
-                    tx.Write(i + "," + data[0, i].ToString() + "," + data[1, i].ToString() + "," + data[2, i].ToString() + "\n");
+                    int ramp_v = (int) Math.Floor(steps*(data[0, i] / 20.0));
+
+                    average[ramp_v, 0] += data[0, 1];
+                    average[ramp_v, 1] += data[0, 2];
+                    average_count[ramp_v]++;
                 }
 
-                tx.Close();
-
             }
+
+            for (int i = 0; i < 10000 / 20; i++)
+            {
+                average[i, 0] /= average_count[i];
+                average[i, 1] /= average_count[i];
+            }
+
+            //write the data
+
             myTaskIn.Dispose();
         }
 
