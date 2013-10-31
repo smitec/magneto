@@ -19,7 +19,7 @@ namespace HectorApp
     {
 
         iselController isc;
-        Task data_output, pulse_output, recording_task;
+        Task data_output, pulse_output;
         double current_x = 0, current_y = 0, current_z = 0, voltage = 1, pulse_spacing = 0.050;
         private RadioButton rdTrap;
         private GroupBox grpSin;
@@ -280,7 +280,7 @@ namespace HectorApp
             pulse_output.Start();
             data_output.Start();
 
-            record_channels(txtFolder.Text + "/output/", (int) (total*10000), 5);
+            record_channels("./output/", (int) (total*10000), 5);
 
             MessageBox.Show("Done");
 
@@ -422,7 +422,15 @@ namespace HectorApp
             }
 
             //write the data
+            TextWriter tx = new StreamWriter("./recording.csv");
+            tx.Write("time,out,in\n");
 
+            for (int i = 0; i < 10000 / 20; i++)
+            {
+                tx.Write((i/10000.0) + "," + average[i, 0] + "," + average[i, 1] + "\n");
+            }
+
+            tx.Close();
             myTaskIn.Dispose();
         }
 
