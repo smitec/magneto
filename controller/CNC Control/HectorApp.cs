@@ -37,6 +37,8 @@ namespace HectorApp
         private RadioButton rdSin;
         bool init = true;
 
+        int sampleRateG = 50000;
+
         public HectorApp()
         {
             InitializeComponent();
@@ -221,7 +223,7 @@ namespace HectorApp
 
             for (int i = 0; i < (int)(time * sampleRate); i++)
             {
-                sin[i] = amp * Math.Sin((2 * Math.PI * freq) * (i / time));
+                sin[i] = amp * Math.Sin((2 * Math.PI * freq) * (i / (sampleRate)));
             }
 
             return sin;
@@ -233,17 +235,17 @@ namespace HectorApp
             double high = Convert.ToDouble(txtTrapHigh.Text.ToString())/1000;
             double fall = Convert.ToDouble(txtTrapFall.Text.ToString())/1000;
             double volts = Convert.ToDouble(txtTrapV.Text.ToString());
-            double freq = Convert.ToDouble(txtTrapV.Text.ToString());
+            double freq = Convert.ToDouble(txtFreq.Text.ToString());
             data_output = new Task();
-            data_output.AOChannels.CreateVoltageChannel("/Dev1/ao1", "", 0, volts, AOVoltageUnits.Volts);
+            data_output.AOChannels.CreateVoltageChannel("/Dev1/ao1", "", -volts, volts, AOVoltageUnits.Volts);
             data_output.AOChannels.CreateVoltageChannel("/Dev1/ao0", "", -10, 10, AOVoltageUnits.Volts);
 
             pulse_output = new Task();
             pulse_output.DOChannels.CreateChannel("Dev1/port0/line0", "", ChannelLineGrouping.OneChannelForAllLines);
 
             // configure the sample rates
-            data_output.Timing.ConfigureSampleClock("", 10000, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples, 1000);
-            pulse_output.Timing.ConfigureSampleClock("/Dev1/ao/SampleClock", 10000, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples, 1000);
+            data_output.Timing.ConfigureSampleClock("", sampleRateG, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples, 1000);
+            pulse_output.Timing.ConfigureSampleClock("/Dev1/ao/SampleClock", sampleRateG, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples, 1000);
 
             // write the analog data
             double total = 0;
@@ -253,25 +255,26 @@ namespace HectorApp
             if (rdTrap.Checked)
             {
                 total = low + rise + high + fall;
-                outData = GenerateTrapezoid(low, rise, high, fall, volts, 10000, total * 10000);
-                tri = GenerateTri(total, low, 10000, 10);
+                outData = GenerateTrapezoid(low, rise, high, fall, volts, sampleRateG, total * sampleRateG);
+                tri = GenerateTri(total, 0, sampleRateG, 10);
             }
             else if (rdSin.Checked)
             {
-                outData = GenerateSin(freq, 10000, volts);
-                total = outData.Length/10000;
-                tri = GenerateTri(total, 0, 10000, 10);
+                outData = GenerateSin(freq, sampleRateG, volts);
+                total = outData.Length / (1.0*sampleRateG);
+                tri = GenerateTri(total, 0, sampleRateG, 10);
             }
 
-            double[,] comb = new double[2,(int)(total*10000)];
+            double[,] comb = new double[2, (int)(total * sampleRateG)];
 
-            for (int i = 0; i < (int)(total*10000); i++) {
+            for (int i = 0; i < (int)(total * sampleRateG); i++)
+            {
                 comb[0,i] = outData[i];
                 comb[1,i] = tri[i];
             }
 
             AnalogMultiChannelWriter ww = new AnalogMultiChannelWriter(data_output.Stream);
-            ww.WriteMultiSample(false, comb);
+            ww.WriteMultiSample(false, comb); //-ve for sin
 
             DigitalWaveform wfm = new DigitalWaveform(outData.Length, 1);
             DigitalSingleChannelWriter d = new DigitalSingleChannelWriter(pulse_output.Stream);
@@ -280,7 +283,7 @@ namespace HectorApp
             pulse_output.Start();
             data_output.Start();
 
-            record_channels("./output/", (int) (total*10000), 5);
+            record_channels("./output/", (int)(total * sampleRateG), 5);
 
             MessageBox.Show("Done");
 
@@ -309,7 +312,7 @@ namespace HectorApp
 
             data_output = new Task();
             data_output.AOChannels.CreateVoltageChannel("/Dev1/ao1", "", -10, 10, AOVoltageUnits.Volts);
-            data_output.AOChannels.CreateVoltageChannel("/Dev1/ao0", "", 0, voltage, AOVoltageUnits.Volts);
+            data_output.AOChannels.CreateVoltageChannel("/Dev1/ao0", "", -voltage, voltage, AOVoltageUnits.Volts);
 
             pulse_output = new Task();
             pulse_output.DOChannels.CreateChannel("Dev1/port0/line0", "", ChannelLineGrouping.OneChannelForAllLines);
@@ -362,7 +365,7 @@ namespace HectorApp
             pulse_output.Start();
             data_output.Start();
 
-            record_channels(txtFolder.Text + "/output/", 1000, 1);
+            record_channels(txtFolder.Text + "/output/", 1000, 20);
 
             MessageBox.Show("Done");
         }
@@ -377,11 +380,11 @@ namespace HectorApp
             //in
             myTaskIn.AIChannels.CreateVoltageChannel("Dev1/ai2", "", AITerminalConfiguration.Rse, -10, 10, AIVoltageUnits.Volts);
 
-            myTaskIn.Timing.ConfigureSampleClock("", 10000, SampleClockActiveEdge.Rising, SampleQuantityMode.FiniteSamples, samples);
+            myTaskIn.Timing.ConfigureSampleClock("", sampleRateG, SampleClockActiveEdge.Rising, SampleQuantityMode.FiniteSamples, samples);
             myTaskIn.Stream.Timeout = 20000;
             AnalogMultiChannelReader r = new AnalogMultiChannelReader(myTaskIn.Stream);
 
-            int steps = 10000/20;
+            int steps = samples;
 
             double[,] data;
 
@@ -391,7 +394,7 @@ namespace HectorApp
             //TODO: characterize the amp
 
 
-            for (int i = 0; i < 10000 / 20; i++)
+            for (int i = 0; i < samples; i++)
             {
                 average[i, 0] = 0;
                 average[i, 1] = 0;
@@ -406,16 +409,19 @@ namespace HectorApp
                 //place the sample in the right place
                 for (int i = 0; i < samples; i++)
                 {
-                    int ramp_v = (int) Math.Floor(steps*(data[0, i] / 20.0));
+                    int ramp_v = (int) Math.Round(steps*((data[1, i]+10) / 20.0));
 
-                    average[ramp_v, 0] += data[0, 1];
-                    average[ramp_v, 1] += data[0, 2];
+                    ramp_v = Math.Max(0, ramp_v);
+                    ramp_v = Math.Min(samples, ramp_v);
+
+                    average[ramp_v, 0] += data[0, i];
+                    average[ramp_v, 1] += data[2, i];
                     average_count[ramp_v]++;
                 }
 
             }
 
-            for (int i = 0; i < 10000 / 20; i++)
+            for (int i = 0; i < samples; i++)
             {
                 average[i, 0] /= average_count[i];
                 average[i, 1] /= average_count[i];
@@ -425,9 +431,9 @@ namespace HectorApp
             TextWriter tx = new StreamWriter("./recording.csv");
             tx.Write("time,out,in\n");
 
-            for (int i = 0; i < 10000 / 20; i++)
+            for (int i = 0; i < samples; i++)
             {
-                tx.Write((i/10000.0) + "," + average[i, 0] + "," + average[i, 1] + "\n");
+                tx.Write((i / (sampleRateG*1.0)) + "," + average[i, 0] + "," + average[i, 1] + "\n");
             }
 
             tx.Close();
