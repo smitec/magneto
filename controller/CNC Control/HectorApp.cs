@@ -70,8 +70,6 @@ namespace HectorApp
             if (init == false)
             {
                 this.isc.reference(axes);
-                this.current_x = this.current_y = this.current_z = 0;
-                this.zero_x = this.zero_y = this.zero_z = 0;
             }
             else
             {
@@ -79,6 +77,9 @@ namespace HectorApp
             }
 
             init = false;
+            this.current_x = this.current_y = this.current_z = 0;
+            this.zero_x = this.zero_y = this.zero_z = 0;
+            this.update_positions();
             toggle_controls(true);
         }
 
@@ -95,7 +96,7 @@ namespace HectorApp
             btnMoveX.Enabled = init_done;
             btnMoveY.Enabled = init_done && (this.isc.axes >= 2);
             btnMoveZ.Enabled = init_done && (this.isc.axes >= 3);
-           // btnSetZero.Enabled = init_done;
+            btnSetZero.Enabled = init_done;
         }
 
         private void update_positions()
@@ -116,12 +117,12 @@ namespace HectorApp
             if (rdoAbsolute.Checked)
             {
                 current_x = Convert.ToDouble(txtXMove.Text);
-                this.isc.move_abs_mm(Convert.ToDouble(txtXMove.Text)+zero_x, current_y+zero_y, current_z+zero_z);
+                this.isc.move_abs_mm(current_x+zero_x, current_y+zero_y, current_z+zero_z);
             }
             else
             {
                 current_x += Convert.ToDouble(txtXMove.Text);
-                this.isc.move_rel_mm(Convert.ToDouble(txtXMove.Text), current_y, current_z);
+                this.isc.move_rel_mm(Convert.ToDouble(txtXMove.Text), 0, 0);
             }
 
             update_positions();
@@ -132,12 +133,12 @@ namespace HectorApp
             if (rdoAbsolute.Checked)
             {
                 current_y = Convert.ToDouble(txtYMove.Text);
-                this.isc.move_abs_mm(current_x+zero_x, Convert.ToDouble(txtYMove.Text)+zero_y, current_z+zero_z);
+                this.isc.move_abs_mm(current_x+zero_x, current_y+zero_y, current_z+zero_z);
             }
             else
             {
                 current_y += Convert.ToDouble(txtYMove.Text);
-                this.isc.move_rel_mm(current_x, Convert.ToDouble(txtYMove.Text), current_z);
+                this.isc.move_rel_mm(0, Convert.ToDouble(txtYMove.Text), 0);
             }
 
             update_positions();
@@ -148,12 +149,12 @@ namespace HectorApp
             if (rdoAbsolute.Checked)
             {
                 current_z = Convert.ToDouble(txtZMove.Text);
-                this.isc.move_abs_mm(current_x+zero_x, current_y+zero_y, Convert.ToDouble(txtZMove.Text)+zero_z);
+                this.isc.move_abs_mm(current_x+zero_x, current_y+zero_y, current_z+zero_z);
             }
             else
             {
                 current_z += Convert.ToDouble(txtZMove.Text);
-                this.isc.move_rel_mm(current_x, current_y, Convert.ToDouble(txtZMove.Text));
+                this.isc.move_rel_mm(0, 0, Convert.ToDouble(txtZMove.Text));
             }
 
             update_positions();
