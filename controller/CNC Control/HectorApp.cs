@@ -21,6 +21,7 @@ namespace HectorApp
         iselController isc;
         Task data_output, pulse_output;
         double current_x = 0, current_y = 0, current_z = 0, voltage = 1, pulse_spacing = 0.050;
+        double zero_x, zero_y, zero_z;
         private RadioButton rdTrap;
         private GroupBox grpSin;
         private TextBox txtFreq;
@@ -36,6 +37,11 @@ namespace HectorApp
         private Label label10;
         private RadioButton rdSin;
         bool init = true;
+        private Label label16;
+        private Label label15;
+        private TextBox txtZWorld;
+        private TextBox txtYWorld;
+        private TextBox txtXWorld;
 
         int sampleRateG = 50000;
 
@@ -65,6 +71,7 @@ namespace HectorApp
             {
                 this.isc.reference(axes);
                 this.current_x = this.current_y = this.current_z = 0;
+                this.zero_x = this.zero_y = this.zero_z = 0;
             }
             else
             {
@@ -93,9 +100,15 @@ namespace HectorApp
 
         private void update_positions()
         {
+            //local coords
             txtXPos.Text = current_x.ToString();
             txtYPos.Text = current_y.ToString();
             txtZPos.Text = current_z.ToString();
+
+            //world coords
+            txtXWorld.Text = (current_x + zero_x).ToString();
+            txtYWorld.Text = (current_y + zero_y).ToString();
+            txtZWorld.Text = (current_z + zero_z).ToString();
         }
 
         private void btnMoveX_Click(object sender, EventArgs e)
@@ -103,7 +116,7 @@ namespace HectorApp
             if (rdoAbsolute.Checked)
             {
                 current_x = Convert.ToDouble(txtXMove.Text);
-                this.isc.move_abs_mm(Convert.ToDouble(txtXMove.Text), current_y, current_z);
+                this.isc.move_abs_mm(Convert.ToDouble(txtXMove.Text)+zero_x, current_y+zero_y, current_z+zero_z);
             }
             else
             {
@@ -119,7 +132,7 @@ namespace HectorApp
             if (rdoAbsolute.Checked)
             {
                 current_y = Convert.ToDouble(txtYMove.Text);
-                this.isc.move_abs_mm(current_x, Convert.ToDouble(txtYMove.Text), current_z);
+                this.isc.move_abs_mm(current_x+zero_x, Convert.ToDouble(txtYMove.Text)+zero_y, current_z+zero_z);
             }
             else
             {
@@ -135,7 +148,7 @@ namespace HectorApp
             if (rdoAbsolute.Checked)
             {
                 current_z = Convert.ToDouble(txtZMove.Text);
-                this.isc.move_abs_mm(current_x, current_y, Convert.ToDouble(txtZMove.Text));
+                this.isc.move_abs_mm(current_x+zero_x, current_y+zero_y, Convert.ToDouble(txtZMove.Text)+zero_z);
             }
             else
             {
@@ -296,80 +309,6 @@ namespace HectorApp
 
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-
-            string json = @"{
-             'OutputFolder': './output',
-             'Type': 0,
-             'PointsFile': './p.csv',
-             'DataFile': './d.csv' 
-             }";
-
-            Experiments exp = Newtonsoft.Json.JsonConvert.DeserializeObject<Experiments>(json);
-
-            double volts = Convert.ToDouble(txtTrapV.Text.ToString());
-
-            data_output = new Task();
-            data_output.AOChannels.CreateVoltageChannel("/Dev1/ao1", "", -10, 10, AOVoltageUnits.Volts);
-            data_output.AOChannels.CreateVoltageChannel("/Dev1/ao0", "", -voltage, voltage, AOVoltageUnits.Volts);
-
-            pulse_output = new Task();
-            pulse_output.DOChannels.CreateChannel("Dev1/port0/line0", "", ChannelLineGrouping.OneChannelForAllLines);
-
-            // configure the sample rates
-            data_output.Timing.ConfigureSampleClock("", 10000, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples, 1000);
-            pulse_output.Timing.ConfigureSampleClock("/Dev1/ao/SampleClock", 10000, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples, 1000);
-
-            // write the analog data
-            string filename = txtFolder.Text + "\\config\\pulse.csv";
-            double val = 0;
-
-            String[] values = File.ReadAllText(filename).Split(',');
-
-            //loop through the values interpolating if needed
-
-            double[] data = new double[(int)((pulse_spacing * 10000) + values.Length)];
-
-            data[0] = 0.0;
-
-            for (int i = 0; i < (int)(pulse_spacing * 10000); i++)
-            {
-                data[i] = 0;
-            }
-
-            for (int i = 0; i < values.Length; i++)
-            {
-                val = double.Parse(values[i]);
-
-                data[i + (int)(10000 * pulse_spacing)] = val;
-
-            }
-
-            double[] tri = GenerateTri(pulse_spacing + (values.Length/10000.0), pulse_spacing, 10000, 10);
-            double[,] comb = new double[2, (int)((pulse_spacing * 10000) + values.Length)];
-
-            for (int i = 0; i < (int)(pulse_spacing * 10000) + values.Length; i++)
-            {
-                comb[0, i] = tri[i];
-                comb[1, i] = data[i];
-            }
-
-            AnalogMultiChannelWriter ww = new AnalogMultiChannelWriter(data_output.Stream);
-            ww.WriteMultiSample(false, comb);
-
-            DigitalWaveform wfm = new DigitalWaveform(data.Length, 1);
-            DigitalSingleChannelWriter d = new DigitalSingleChannelWriter(pulse_output.Stream);
-            d.WriteWaveform(false, generate_pulse(data, volts));
-
-            pulse_output.Start();
-            data_output.Start();
-
-            record_channels(txtFolder.Text + "/output/", 1000, 20);
-
-            MessageBox.Show("Done");
-        }
-
         private void record_channels(string foldername, int samples, int recordings)
         {
             Task myTaskIn = new Task();
@@ -438,16 +377,6 @@ namespace HectorApp
 
             tx.Close();
             myTaskIn.Dispose();
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            FolderBrowserDialog fd = new FolderBrowserDialog();
-
-            if (fd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                txtFolder.Text = fd.SelectedPath;
-            }
         }
 
         //first letter is across second is down
@@ -589,21 +518,17 @@ namespace HectorApp
             this.btnStartTrapezoid = new System.Windows.Forms.Button();
             this.label18 = new System.Windows.Forms.Label();
             this.txtTrapV = new System.Windows.Forms.TextBox();
-            this.btnLoad = new System.Windows.Forms.Button();
-            this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.prgexp = new System.Windows.Forms.ProgressBar();
-            this.btnRun = new System.Windows.Forms.Button();
-            this.btnTestPulse = new System.Windows.Forms.Button();
-            this.label20 = new System.Windows.Forms.Label();
-            this.txtFolder = new System.Windows.Forms.TextBox();
-            this.button2 = new System.Windows.Forms.Button();
+            this.txtZWorld = new System.Windows.Forms.TextBox();
+            this.txtYWorld = new System.Windows.Forms.TextBox();
+            this.txtXWorld = new System.Windows.Forms.TextBox();
+            this.label15 = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.grpSin.SuspendLayout();
             this.grpTrap.SuspendLayout();
-            this.groupBox5.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
@@ -741,6 +666,11 @@ namespace HectorApp
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.label16);
+            this.groupBox2.Controls.Add(this.label15);
+            this.groupBox2.Controls.Add(this.txtZWorld);
+            this.groupBox2.Controls.Add(this.txtYWorld);
+            this.groupBox2.Controls.Add(this.txtXWorld);
             this.groupBox2.Controls.Add(this.btnSetZero);
             this.groupBox2.Controls.Add(this.label7);
             this.groupBox2.Controls.Add(this.label6);
@@ -758,17 +688,18 @@ namespace HectorApp
             // btnSetZero
             // 
             this.btnSetZero.Enabled = false;
-            this.btnSetZero.Location = new System.Drawing.Point(9, 105);
+            this.btnSetZero.Location = new System.Drawing.Point(9, 117);
             this.btnSetZero.Name = "btnSetZero";
             this.btnSetZero.Size = new System.Drawing.Size(120, 28);
             this.btnSetZero.TabIndex = 5;
             this.btnSetZero.Text = "Set Zero";
             this.btnSetZero.UseVisualStyleBackColor = true;
+            this.btnSetZero.Click += new System.EventHandler(this.btnSetZero_Click);
             // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(6, 71);
+            this.label7.Location = new System.Drawing.Point(6, 98);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(17, 13);
             this.label7.TabIndex = 4;
@@ -777,7 +708,7 @@ namespace HectorApp
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(6, 19);
+            this.label6.Location = new System.Drawing.Point(6, 46);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(17, 13);
             this.label6.TabIndex = 1;
@@ -786,16 +717,16 @@ namespace HectorApp
             // txtZPos
             // 
             this.txtZPos.Enabled = false;
-            this.txtZPos.Location = new System.Drawing.Point(29, 68);
+            this.txtZPos.Location = new System.Drawing.Point(29, 95);
             this.txtZPos.Name = "txtZPos";
-            this.txtZPos.Size = new System.Drawing.Size(100, 20);
+            this.txtZPos.Size = new System.Drawing.Size(39, 20);
             this.txtZPos.TabIndex = 3;
             this.txtZPos.Text = "0";
             // 
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(6, 45);
+            this.label5.Location = new System.Drawing.Point(6, 72);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(17, 13);
             this.label5.TabIndex = 0;
@@ -804,18 +735,18 @@ namespace HectorApp
             // txtYPos
             // 
             this.txtYPos.Enabled = false;
-            this.txtYPos.Location = new System.Drawing.Point(29, 42);
+            this.txtYPos.Location = new System.Drawing.Point(29, 69);
             this.txtYPos.Name = "txtYPos";
-            this.txtYPos.Size = new System.Drawing.Size(100, 20);
+            this.txtYPos.Size = new System.Drawing.Size(39, 20);
             this.txtYPos.TabIndex = 2;
             this.txtYPos.Text = "0";
             // 
             // txtXPos
             // 
             this.txtXPos.Enabled = false;
-            this.txtXPos.Location = new System.Drawing.Point(29, 16);
+            this.txtXPos.Location = new System.Drawing.Point(29, 43);
             this.txtXPos.Name = "txtXPos";
-            this.txtXPos.Size = new System.Drawing.Size(100, 20);
+            this.txtXPos.Size = new System.Drawing.Size(39, 20);
             this.txtXPos.TabIndex = 1;
             this.txtXPos.Text = "0";
             // 
@@ -919,10 +850,10 @@ namespace HectorApp
             this.groupBox4.Controls.Add(this.txtTrapV);
             this.groupBox4.Location = new System.Drawing.Point(13, 173);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(203, 397);
+            this.groupBox4.Size = new System.Drawing.Size(627, 397);
             this.groupBox4.TabIndex = 3;
             this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "Forced Output";
+            this.groupBox4.Text = "Experiment";
             // 
             // rdSin
             // 
@@ -1110,90 +1041,56 @@ namespace HectorApp
             this.txtTrapV.TabIndex = 13;
             this.txtTrapV.Text = "0.5";
             // 
-            // btnLoad
+            // txtZWorld
             // 
-            this.btnLoad.Location = new System.Drawing.Point(291, 50);
-            this.btnLoad.Name = "btnLoad";
-            this.btnLoad.Size = new System.Drawing.Size(120, 23);
-            this.btnLoad.TabIndex = 18;
-            this.btnLoad.Text = "Load";
-            this.btnLoad.UseVisualStyleBackColor = true;
-            this.btnLoad.Click += new System.EventHandler(this.button1_Click);
+            this.txtZWorld.Enabled = false;
+            this.txtZWorld.Location = new System.Drawing.Point(74, 94);
+            this.txtZWorld.Name = "txtZWorld";
+            this.txtZWorld.Size = new System.Drawing.Size(39, 20);
+            this.txtZWorld.TabIndex = 8;
+            this.txtZWorld.Text = "0";
             // 
-            // groupBox5
+            // txtYWorld
             // 
-            this.groupBox5.Controls.Add(this.prgexp);
-            this.groupBox5.Controls.Add(this.btnRun);
-            this.groupBox5.Controls.Add(this.btnTestPulse);
-            this.groupBox5.Controls.Add(this.btnLoad);
-            this.groupBox5.Controls.Add(this.label20);
-            this.groupBox5.Controls.Add(this.txtFolder);
-            this.groupBox5.Controls.Add(this.button2);
-            this.groupBox5.Location = new System.Drawing.Point(219, 173);
-            this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(421, 151);
-            this.groupBox5.TabIndex = 4;
-            this.groupBox5.TabStop = false;
-            this.groupBox5.Text = "Load Experiment";
+            this.txtYWorld.Enabled = false;
+            this.txtYWorld.Location = new System.Drawing.Point(74, 68);
+            this.txtYWorld.Name = "txtYWorld";
+            this.txtYWorld.Size = new System.Drawing.Size(39, 20);
+            this.txtYWorld.TabIndex = 7;
+            this.txtYWorld.Text = "0";
             // 
-            // prgexp
+            // txtXWorld
             // 
-            this.prgexp.Location = new System.Drawing.Point(11, 79);
-            this.prgexp.Name = "prgexp";
-            this.prgexp.Size = new System.Drawing.Size(400, 23);
-            this.prgexp.TabIndex = 21;
+            this.txtXWorld.Enabled = false;
+            this.txtXWorld.Location = new System.Drawing.Point(74, 42);
+            this.txtXWorld.Name = "txtXWorld";
+            this.txtXWorld.Size = new System.Drawing.Size(39, 20);
+            this.txtXWorld.TabIndex = 6;
+            this.txtXWorld.Text = "0";
             // 
-            // btnRun
+            // label15
             // 
-            this.btnRun.Location = new System.Drawing.Point(291, 108);
-            this.btnRun.Name = "btnRun";
-            this.btnRun.Size = new System.Drawing.Size(120, 23);
-            this.btnRun.TabIndex = 20;
-            this.btnRun.Text = "Run";
-            this.btnRun.UseVisualStyleBackColor = true;
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(26, 27);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(29, 13);
+            this.label15.TabIndex = 9;
+            this.label15.Text = "local";
             // 
-            // btnTestPulse
+            // label16
             // 
-            this.btnTestPulse.Location = new System.Drawing.Point(165, 108);
-            this.btnTestPulse.Name = "btnTestPulse";
-            this.btnTestPulse.Size = new System.Drawing.Size(120, 23);
-            this.btnTestPulse.TabIndex = 19;
-            this.btnTestPulse.Text = "Test Pulse";
-            this.btnTestPulse.UseVisualStyleBackColor = true;
-            this.btnTestPulse.Click += new System.EventHandler(this.button1_Click);
-            // 
-            // label20
-            // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(7, 27);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(94, 13);
-            this.label20.TabIndex = 4;
-            this.label20.Text = "Experiment Folder:";
-            // 
-            // txtFolder
-            // 
-            this.txtFolder.Location = new System.Drawing.Point(107, 24);
-            this.txtFolder.Name = "txtFolder";
-            this.txtFolder.Size = new System.Drawing.Size(268, 20);
-            this.txtFolder.TabIndex = 1;
-            // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(381, 22);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(30, 23);
-            this.button2.TabIndex = 0;
-            this.button2.Text = "...";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(71, 27);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(32, 13);
+            this.label16.TabIndex = 10;
+            this.label16.Text = "world";
             // 
             // HectorApp
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(741, 575);
-            this.Controls.Add(this.groupBox5);
+            this.ClientSize = new System.Drawing.Size(650, 575);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
@@ -1213,8 +1110,6 @@ namespace HectorApp
             this.grpSin.PerformLayout();
             this.grpTrap.ResumeLayout(false);
             this.grpTrap.PerformLayout();
-            this.groupBox5.ResumeLayout(false);
-            this.groupBox5.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -1256,14 +1151,6 @@ namespace HectorApp
         private System.Windows.Forms.Label label18;
         private System.Windows.Forms.TextBox txtTrapV;
         private System.Windows.Forms.Label label19;
-        private System.Windows.Forms.Button btnLoad;
-        private System.Windows.Forms.GroupBox groupBox5;
-        private System.Windows.Forms.Label label20;
-        private System.Windows.Forms.TextBox txtFolder;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.ProgressBar prgexp;
-        private System.Windows.Forms.Button btnRun;
-        private System.Windows.Forms.Button btnTestPulse;
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
@@ -1279,6 +1166,15 @@ namespace HectorApp
         {
             grpSin.Enabled = rdSin.Checked;
             grpTrap.Enabled = rdTrap.Checked;
+        }
+
+        private void btnSetZero_Click(object sender, EventArgs e)
+        {
+            this.zero_x = this.current_x;
+            this.zero_y = this.current_y;
+            this.zero_z = this.current_z;
+            this.current_x = this.current_y = this.current_z = 0;
+            this.update_positions();
         }
 
     }
