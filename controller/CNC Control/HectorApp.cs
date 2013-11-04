@@ -50,13 +50,22 @@ namespace HectorApp
         private ProgressBar prgExp;
         private Button btnResetZero;
         private Label lblStatus;
+        private Label lblFreq;
+        private Button btnLoadFreq;
 
         private class SpacePt
         {
             public double x, y, z;
         }
 
-        List<SpacePt> points;
+        List<SpacePt> points = null;
+        private ProgressBar prgSub;
+        private Button btnMoveAll;
+        private Label lblFolder;
+        private Button btnFolder;
+        List<double> frequencies = null;
+
+        String folder = "";
 
 
 
@@ -112,7 +121,9 @@ namespace HectorApp
             btnMoveX.Enabled = init_done;
             btnMoveY.Enabled = init_done && (this.isc.axes >= 2);
             btnMoveZ.Enabled = init_done && (this.isc.axes >= 3);
+            btnMoveAll.Enabled = init_done;
             btnSetZero.Enabled = init_done;
+            btnResetZero.Enabled = init_done;
         }
 
         private void update_positions()
@@ -313,7 +324,7 @@ namespace HectorApp
             pulse_output.Start();
             data_output.Start();
 
-            record_channels("./output/", (int)(total * sampleRateG), 5);
+            //record_channels("./output/", (int)(total * sampleRateG), 5);
 
             MessageBox.Show("Done");
 
@@ -326,7 +337,7 @@ namespace HectorApp
 
         }
 
-        private void record_channels(string foldername, int samples, int recordings)
+        private void record_channels(string path, int samples, int recordings)
         {
             Task myTaskIn = new Task();
             //ramp
@@ -384,7 +395,7 @@ namespace HectorApp
             }
 
             //write the data
-            TextWriter tx = new StreamWriter("./recording.csv");
+            TextWriter tx = new StreamWriter(path);
             tx.Write("time,out,in\n");
 
             for (int i = 0; i < samples; i++)
@@ -546,6 +557,12 @@ namespace HectorApp
             this.label18 = new System.Windows.Forms.Label();
             this.txtTrapV = new System.Windows.Forms.TextBox();
             this.lblStatus = new System.Windows.Forms.Label();
+            this.btnLoadFreq = new System.Windows.Forms.Button();
+            this.lblFreq = new System.Windows.Forms.Label();
+            this.prgSub = new System.Windows.Forms.ProgressBar();
+            this.btnMoveAll = new System.Windows.Forms.Button();
+            this.btnFolder = new System.Windows.Forms.Button();
+            this.lblFolder = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -556,6 +573,7 @@ namespace HectorApp
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.btnMoveAll);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.btnMoveZ);
             this.groupBox1.Controls.Add(this.rdoAbsolute);
@@ -586,7 +604,7 @@ namespace HectorApp
             // 
             // btnMoveZ
             // 
-            this.btnMoveZ.Location = new System.Drawing.Point(191, 108);
+            this.btnMoveZ.Location = new System.Drawing.Point(191, 105);
             this.btnMoveZ.Name = "btnMoveZ";
             this.btnMoveZ.Size = new System.Drawing.Size(75, 23);
             this.btnMoveZ.TabIndex = 10;
@@ -618,7 +636,7 @@ namespace HectorApp
             // 
             // btnMoveY
             // 
-            this.btnMoveY.Location = new System.Drawing.Point(191, 79);
+            this.btnMoveY.Location = new System.Drawing.Point(191, 76);
             this.btnMoveY.Name = "btnMoveY";
             this.btnMoveY.Size = new System.Drawing.Size(75, 23);
             this.btnMoveY.TabIndex = 9;
@@ -629,7 +647,7 @@ namespace HectorApp
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(7, 55);
+            this.label1.Location = new System.Drawing.Point(7, 52);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(72, 13);
             this.label1.TabIndex = 0;
@@ -637,7 +655,7 @@ namespace HectorApp
             // 
             // btnMoveX
             // 
-            this.btnMoveX.Location = new System.Drawing.Point(191, 50);
+            this.btnMoveX.Location = new System.Drawing.Point(191, 47);
             this.btnMoveX.Name = "btnMoveX";
             this.btnMoveX.Size = new System.Drawing.Size(75, 23);
             this.btnMoveX.TabIndex = 2;
@@ -648,7 +666,7 @@ namespace HectorApp
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(7, 113);
+            this.label3.Location = new System.Drawing.Point(7, 110);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(72, 13);
             this.label3.TabIndex = 8;
@@ -656,7 +674,7 @@ namespace HectorApp
             // 
             // txtYMove
             // 
-            this.txtYMove.Location = new System.Drawing.Point(85, 81);
+            this.txtYMove.Location = new System.Drawing.Point(85, 78);
             this.txtYMove.Name = "txtYMove";
             this.txtYMove.Size = new System.Drawing.Size(100, 20);
             this.txtYMove.TabIndex = 5;
@@ -664,7 +682,7 @@ namespace HectorApp
             // 
             // txtZMove
             // 
-            this.txtZMove.Location = new System.Drawing.Point(85, 110);
+            this.txtZMove.Location = new System.Drawing.Point(85, 107);
             this.txtZMove.Name = "txtZMove";
             this.txtZMove.Size = new System.Drawing.Size(100, 20);
             this.txtZMove.TabIndex = 6;
@@ -672,7 +690,7 @@ namespace HectorApp
             // 
             // txtXMove
             // 
-            this.txtXMove.Location = new System.Drawing.Point(85, 52);
+            this.txtXMove.Location = new System.Drawing.Point(85, 49);
             this.txtXMove.Name = "txtXMove";
             this.txtXMove.Size = new System.Drawing.Size(100, 20);
             this.txtXMove.TabIndex = 1;
@@ -681,7 +699,7 @@ namespace HectorApp
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(7, 84);
+            this.label2.Location = new System.Drawing.Point(7, 81);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(72, 13);
             this.label2.TabIndex = 7;
@@ -919,6 +937,11 @@ namespace HectorApp
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.lblFolder);
+            this.groupBox4.Controls.Add(this.btnFolder);
+            this.groupBox4.Controls.Add(this.prgSub);
+            this.groupBox4.Controls.Add(this.lblFreq);
+            this.groupBox4.Controls.Add(this.btnLoadFreq);
             this.groupBox4.Controls.Add(this.lblStatus);
             this.groupBox4.Controls.Add(this.prgExp);
             this.groupBox4.Controls.Add(this.lblPoints);
@@ -942,15 +965,15 @@ namespace HectorApp
             // 
             // prgExp
             // 
-            this.prgExp.Location = new System.Drawing.Point(206, 348);
+            this.prgExp.Location = new System.Drawing.Point(206, 337);
             this.prgExp.Name = "prgExp";
-            this.prgExp.Size = new System.Drawing.Size(334, 35);
+            this.prgExp.Size = new System.Drawing.Size(334, 20);
             this.prgExp.TabIndex = 25;
             // 
             // lblPoints
             // 
             this.lblPoints.AutoSize = true;
-            this.lblPoints.Location = new System.Drawing.Point(281, 61);
+            this.lblPoints.Location = new System.Drawing.Point(326, 61);
             this.lblPoints.Name = "lblPoints";
             this.lblPoints.Size = new System.Drawing.Size(92, 13);
             this.lblPoints.TabIndex = 24;
@@ -958,9 +981,9 @@ namespace HectorApp
             // 
             // btnRun
             // 
-            this.btnRun.Location = new System.Drawing.Point(546, 348);
+            this.btnRun.Location = new System.Drawing.Point(546, 337);
             this.btnRun.Name = "btnRun";
-            this.btnRun.Size = new System.Drawing.Size(75, 35);
+            this.btnRun.Size = new System.Drawing.Size(75, 46);
             this.btnRun.TabIndex = 23;
             this.btnRun.Text = "Run Experiment";
             this.btnRun.UseVisualStyleBackColor = true;
@@ -970,7 +993,7 @@ namespace HectorApp
             // 
             this.btnLoadPoints.Location = new System.Drawing.Point(200, 56);
             this.btnLoadPoints.Name = "btnLoadPoints";
-            this.btnLoadPoints.Size = new System.Drawing.Size(75, 23);
+            this.btnLoadPoints.Size = new System.Drawing.Size(120, 23);
             this.btnLoadPoints.TabIndex = 22;
             this.btnLoadPoints.Text = "Load Points";
             this.btnLoadPoints.UseVisualStyleBackColor = true;
@@ -1165,11 +1188,67 @@ namespace HectorApp
             // lblStatus
             // 
             this.lblStatus.AutoSize = true;
-            this.lblStatus.Location = new System.Drawing.Point(203, 332);
+            this.lblStatus.Location = new System.Drawing.Point(204, 320);
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(37, 13);
             this.lblStatus.TabIndex = 26;
             this.lblStatus.Text = "Status";
+            // 
+            // btnLoadFreq
+            // 
+            this.btnLoadFreq.Location = new System.Drawing.Point(200, 83);
+            this.btnLoadFreq.Name = "btnLoadFreq";
+            this.btnLoadFreq.Size = new System.Drawing.Size(120, 23);
+            this.btnLoadFreq.TabIndex = 27;
+            this.btnLoadFreq.Text = "Load Frequencies";
+            this.btnLoadFreq.UseVisualStyleBackColor = true;
+            this.btnLoadFreq.Click += new System.EventHandler(this.btnLoadFreq_Click);
+            // 
+            // lblFreq
+            // 
+            this.lblFreq.AutoSize = true;
+            this.lblFreq.Location = new System.Drawing.Point(326, 88);
+            this.lblFreq.Name = "lblFreq";
+            this.lblFreq.Size = new System.Drawing.Size(121, 13);
+            this.lblFreq.TabIndex = 28;
+            this.lblFreq.Text = "No Frequencies Loaded";
+            // 
+            // prgSub
+            // 
+            this.prgSub.Location = new System.Drawing.Point(206, 363);
+            this.prgSub.Name = "prgSub";
+            this.prgSub.Size = new System.Drawing.Size(334, 20);
+            this.prgSub.TabIndex = 29;
+            // 
+            // btnMoveAll
+            // 
+            this.btnMoveAll.Enabled = false;
+            this.btnMoveAll.Location = new System.Drawing.Point(191, 134);
+            this.btnMoveAll.Name = "btnMoveAll";
+            this.btnMoveAll.Size = new System.Drawing.Size(75, 23);
+            this.btnMoveAll.TabIndex = 12;
+            this.btnMoveAll.Text = "Move All";
+            this.btnMoveAll.UseVisualStyleBackColor = true;
+            this.btnMoveAll.Click += new System.EventHandler(this.btnMoveAll_Click);
+            // 
+            // btnFolder
+            // 
+            this.btnFolder.Location = new System.Drawing.Point(200, 112);
+            this.btnFolder.Name = "btnFolder";
+            this.btnFolder.Size = new System.Drawing.Size(120, 23);
+            this.btnFolder.TabIndex = 30;
+            this.btnFolder.Text = "Select Output Folder";
+            this.btnFolder.UseVisualStyleBackColor = true;
+            this.btnFolder.Click += new System.EventHandler(this.btnFolder_Click);
+            // 
+            // lblFolder
+            // 
+            this.lblFolder.AutoSize = true;
+            this.lblFolder.Location = new System.Drawing.Point(326, 117);
+            this.lblFolder.Name = "lblFolder";
+            this.lblFolder.Size = new System.Drawing.Size(98, 13);
+            this.lblFolder.TabIndex = 31;
+            this.lblFolder.Text = "No Folder Selected";
             // 
             // HectorApp
             // 
@@ -1305,6 +1384,19 @@ namespace HectorApp
 
         private void btnRun_Click(object sender, EventArgs e)
         {
+            if (this.points == null)
+            {
+                MessageBox.Show("No Points Loaded. Aborting");
+                return;
+            }
+
+            if (this.frequencies == null)
+            {
+                MessageBox.Show("No Frequencies Loaded. Aborting");
+                return;
+                //TODO pule shapes
+            }
+
             //set zero
             DialogResult cd = MessageBox.Show("Set current Poition as (0,0,0)?", "Zero position", MessageBoxButtons.YesNoCancel);
 
@@ -1343,6 +1435,20 @@ namespace HectorApp
             }
 
 
+            //check Frequencies
+            lblStatus.Text = "Checking Frequencies";
+            prgExp.Maximum = this.frequencies.Count - 1;
+            for (int i = 0; i < this.frequencies.Count; i++)
+            {
+                if (this.frequencies[i] > 10000.0)
+                {
+                    MessageBox.Show("Frequency " + (i + 1).ToString() + " Exceeds the 10kHz Limit. Aborting");
+                    return;
+                }
+                this.prgExp.Value = i;
+            }
+
+
             // Run Experiment
             lblStatus.Text = "Running Experiment";
             prgExp.Maximum = this.points.Count-1;
@@ -1356,6 +1462,12 @@ namespace HectorApp
                 this.update_positions();
                 this.prgExp.Value = i;
                 Thread.Sleep(500);
+                this.prgSub.Maximum = this.frequencies.Count - 1;
+                for (int f = 0; f < this.frequencies.Count; f++)
+                {
+                    this.record_sin(this.frequencies[f], 5, 5, i.ToString() + "_" + f.ToString() + ".csv");
+                    this.prgSub.Value = f;
+                }
             }
 
             lblStatus.Text = "Done!";
@@ -1368,6 +1480,110 @@ namespace HectorApp
             this.current_z = this.zero_z;
             this.zero_x = this.zero_y = this.zero_z = 0;
             this.update_positions();
+        }
+
+        private void btnLoadFreq_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog fd = new OpenFileDialog();
+            List<double> result = new List<double>();
+
+            if (fd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                String pts = fd.FileName;
+                StreamReader sr = new StreamReader(pts);
+                while (!sr.EndOfStream)
+                {
+                    String line = sr.ReadLine();
+
+                    double next_f = double.Parse(line);
+
+                    result.Add(next_f);
+
+                }
+                sr.Close();
+            }
+
+            this.frequencies = result;
+            this.lblFreq.Text = "Loaded " + this.frequencies.Count.ToString() + " Frequencies.";
+        }
+
+        private void btnMoveAll_Click(object sender, EventArgs e)
+        {
+            if (rdoAbsolute.Checked)
+            {
+                current_x = Convert.ToDouble(txtXMove.Text);
+                current_y = Convert.ToDouble(txtYMove.Text);
+                current_z = Convert.ToDouble(txtZMove.Text);
+                this.isc.move_abs_mm(current_x + zero_x, current_y + zero_y, current_z + zero_z);
+            }
+            else
+            {
+                current_x += Convert.ToDouble(txtXMove.Text);
+                current_y += Convert.ToDouble(txtYMove.Text);
+                current_z += Convert.ToDouble(txtZMove.Text);
+                this.isc.move_rel_mm(Convert.ToDouble(txtXMove.Text), Convert.ToDouble(txtYMove.Text), Convert.ToDouble(txtZMove.Text));
+            }
+
+            update_positions();
+        }
+
+
+        private void record_sin(double freq, double volts, int averages, string filename)
+        {
+            data_output = new Task();
+            data_output.AOChannels.CreateVoltageChannel("/Dev1/ao1", "", -volts, volts, AOVoltageUnits.Volts);
+            data_output.AOChannels.CreateVoltageChannel("/Dev1/ao0", "", -10, 10, AOVoltageUnits.Volts);
+
+            pulse_output = new Task();
+            pulse_output.DOChannels.CreateChannel("Dev1/port0/line0", "", ChannelLineGrouping.OneChannelForAllLines);
+
+            // configure the sample rates
+            data_output.Timing.ConfigureSampleClock("", sampleRateG, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples, 1000);
+            pulse_output.Timing.ConfigureSampleClock("/Dev1/ao/SampleClock", sampleRateG, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples, 1000);
+
+            // write the analog data
+            double total = 0;
+            double[] outData = null;
+            double[] tri = null;
+
+ 
+            outData = GenerateSin(freq, sampleRateG, volts);
+            total = outData.Length / (1.0 * sampleRateG);
+            tri = GenerateTri(total, 0, sampleRateG, 10);
+
+            double[,] comb = new double[2, (int)(total * sampleRateG)];
+
+            for (int i = 0; i < (int)(total * sampleRateG); i++)
+            {
+                comb[0, i] = outData[i];
+                comb[1, i] = tri[i];
+            }
+
+            AnalogMultiChannelWriter ww = new AnalogMultiChannelWriter(data_output.Stream);
+            ww.WriteMultiSample(false, comb); //-ve for sin
+
+            DigitalWaveform wfm = new DigitalWaveform(outData.Length, 1);
+            DigitalSingleChannelWriter d = new DigitalSingleChannelWriter(pulse_output.Stream);
+            d.WriteWaveform(false, generate_pulse(outData, volts));
+
+            pulse_output.Start();
+            data_output.Start();
+
+            record_channels(this.folder + "\\" + filename, (int)(total * sampleRateG), 5);
+
+            pulse_output.Dispose();
+            data_output.Dispose();
+
+        }
+
+        private void btnFolder_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog fd = new FolderBrowserDialog();
+
+            if (fd.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+                this.folder = fd.SelectedPath;
+                this.lblFolder.Text = "Selected Folder: " + this.folder;
+            }
         }
 
     }
