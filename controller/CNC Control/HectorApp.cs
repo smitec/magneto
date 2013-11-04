@@ -20,7 +20,7 @@ namespace HectorApp
 
         iselController isc;
         Task data_output, pulse_output;
-        double current_x = 0, current_y = 0, current_z = 0, voltage = 1, pulse_spacing = 0.050;
+        double current_x = 0, current_y = 0, current_z = 0;
         double zero_x, zero_y, zero_z;
         private RadioButton rdTrap;
         private GroupBox grpSin;
@@ -42,8 +42,24 @@ namespace HectorApp
         private TextBox txtZWorld;
         private TextBox txtYWorld;
         private TextBox txtXWorld;
+        private Button btnLoadPoints;
 
         int sampleRateG = 50000;
+        private Label lblPoints;
+        private Button btnRun;
+        private ProgressBar prgExp;
+        private Button btnResetZero;
+        private Label lblStatus;
+
+        private class SpacePt
+        {
+            public double x, y, z;
+        }
+
+        List<SpacePt> points;
+
+
+
 
         public HectorApp()
         {
@@ -484,6 +500,12 @@ namespace HectorApp
             this.txtXMove = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.btnResetZero = new System.Windows.Forms.Button();
+            this.label16 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.txtZWorld = new System.Windows.Forms.TextBox();
+            this.txtYWorld = new System.Windows.Forms.TextBox();
+            this.txtXWorld = new System.Windows.Forms.TextBox();
             this.btnSetZero = new System.Windows.Forms.Button();
             this.label7 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
@@ -500,6 +522,10 @@ namespace HectorApp
             this.rdo2Axis = new System.Windows.Forms.RadioButton();
             this.rdo1Axis = new System.Windows.Forms.RadioButton();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.prgExp = new System.Windows.Forms.ProgressBar();
+            this.lblPoints = new System.Windows.Forms.Label();
+            this.btnRun = new System.Windows.Forms.Button();
+            this.btnLoadPoints = new System.Windows.Forms.Button();
             this.rdSin = new System.Windows.Forms.RadioButton();
             this.rdTrap = new System.Windows.Forms.RadioButton();
             this.grpSin = new System.Windows.Forms.GroupBox();
@@ -519,11 +545,7 @@ namespace HectorApp
             this.btnStartTrapezoid = new System.Windows.Forms.Button();
             this.label18 = new System.Windows.Forms.Label();
             this.txtTrapV = new System.Windows.Forms.TextBox();
-            this.txtZWorld = new System.Windows.Forms.TextBox();
-            this.txtYWorld = new System.Windows.Forms.TextBox();
-            this.txtXWorld = new System.Windows.Forms.TextBox();
-            this.label15 = new System.Windows.Forms.Label();
-            this.label16 = new System.Windows.Forms.Label();
+            this.lblStatus = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -548,10 +570,10 @@ namespace HectorApp
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Location = new System.Drawing.Point(219, 13);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(276, 153);
+            this.groupBox1.Size = new System.Drawing.Size(276, 162);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Jog Controls";
+            this.groupBox1.Text = "Manual Control";
             // 
             // label4
             // 
@@ -667,6 +689,7 @@ namespace HectorApp
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.btnResetZero);
             this.groupBox2.Controls.Add(this.label16);
             this.groupBox2.Controls.Add(this.label15);
             this.groupBox2.Controls.Add(this.txtZWorld);
@@ -681,17 +704,73 @@ namespace HectorApp
             this.groupBox2.Controls.Add(this.txtXPos);
             this.groupBox2.Location = new System.Drawing.Point(501, 13);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(139, 153);
+            this.groupBox2.Size = new System.Drawing.Size(139, 162);
             this.groupBox2.TabIndex = 1;
             this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Position Info (mm)";
+            this.groupBox2.Text = "Position (mm)";
+            // 
+            // btnResetZero
+            // 
+            this.btnResetZero.Enabled = false;
+            this.btnResetZero.Location = new System.Drawing.Point(13, 133);
+            this.btnResetZero.Name = "btnResetZero";
+            this.btnResetZero.Size = new System.Drawing.Size(111, 20);
+            this.btnResetZero.TabIndex = 11;
+            this.btnResetZero.Text = "Reset Zero";
+            this.btnResetZero.UseVisualStyleBackColor = true;
+            this.btnResetZero.Click += new System.EventHandler(this.btnResetZero_Click);
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(82, 16);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(35, 13);
+            this.label16.TabIndex = 10;
+            this.label16.Text = "World";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(30, 16);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(33, 13);
+            this.label15.TabIndex = 9;
+            this.label15.Text = "Local";
+            // 
+            // txtZWorld
+            // 
+            this.txtZWorld.Enabled = false;
+            this.txtZWorld.Location = new System.Drawing.Point(85, 82);
+            this.txtZWorld.Name = "txtZWorld";
+            this.txtZWorld.Size = new System.Drawing.Size(39, 20);
+            this.txtZWorld.TabIndex = 8;
+            this.txtZWorld.Text = "0";
+            // 
+            // txtYWorld
+            // 
+            this.txtYWorld.Enabled = false;
+            this.txtYWorld.Location = new System.Drawing.Point(85, 57);
+            this.txtYWorld.Name = "txtYWorld";
+            this.txtYWorld.Size = new System.Drawing.Size(39, 20);
+            this.txtYWorld.TabIndex = 7;
+            this.txtYWorld.Text = "0";
+            // 
+            // txtXWorld
+            // 
+            this.txtXWorld.Enabled = false;
+            this.txtXWorld.Location = new System.Drawing.Point(85, 31);
+            this.txtXWorld.Name = "txtXWorld";
+            this.txtXWorld.Size = new System.Drawing.Size(39, 20);
+            this.txtXWorld.TabIndex = 6;
+            this.txtXWorld.Text = "0";
             // 
             // btnSetZero
             // 
             this.btnSetZero.Enabled = false;
-            this.btnSetZero.Location = new System.Drawing.Point(9, 117);
+            this.btnSetZero.Location = new System.Drawing.Point(13, 110);
             this.btnSetZero.Name = "btnSetZero";
-            this.btnSetZero.Size = new System.Drawing.Size(120, 28);
+            this.btnSetZero.Size = new System.Drawing.Size(111, 20);
             this.btnSetZero.TabIndex = 5;
             this.btnSetZero.Text = "Set Zero";
             this.btnSetZero.UseVisualStyleBackColor = true;
@@ -700,7 +779,7 @@ namespace HectorApp
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(6, 98);
+            this.label7.Location = new System.Drawing.Point(10, 87);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(17, 13);
             this.label7.TabIndex = 4;
@@ -709,7 +788,7 @@ namespace HectorApp
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(6, 46);
+            this.label6.Location = new System.Drawing.Point(10, 35);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(17, 13);
             this.label6.TabIndex = 1;
@@ -718,7 +797,7 @@ namespace HectorApp
             // txtZPos
             // 
             this.txtZPos.Enabled = false;
-            this.txtZPos.Location = new System.Drawing.Point(29, 95);
+            this.txtZPos.Location = new System.Drawing.Point(33, 84);
             this.txtZPos.Name = "txtZPos";
             this.txtZPos.Size = new System.Drawing.Size(39, 20);
             this.txtZPos.TabIndex = 3;
@@ -727,7 +806,7 @@ namespace HectorApp
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(6, 72);
+            this.label5.Location = new System.Drawing.Point(10, 61);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(17, 13);
             this.label5.TabIndex = 0;
@@ -736,7 +815,7 @@ namespace HectorApp
             // txtYPos
             // 
             this.txtYPos.Enabled = false;
-            this.txtYPos.Location = new System.Drawing.Point(29, 69);
+            this.txtYPos.Location = new System.Drawing.Point(33, 58);
             this.txtYPos.Name = "txtYPos";
             this.txtYPos.Size = new System.Drawing.Size(39, 20);
             this.txtYPos.TabIndex = 2;
@@ -745,7 +824,7 @@ namespace HectorApp
             // txtXPos
             // 
             this.txtXPos.Enabled = false;
-            this.txtXPos.Location = new System.Drawing.Point(29, 43);
+            this.txtXPos.Location = new System.Drawing.Point(33, 32);
             this.txtXPos.Name = "txtXPos";
             this.txtXPos.Size = new System.Drawing.Size(39, 20);
             this.txtXPos.TabIndex = 1;
@@ -762,7 +841,7 @@ namespace HectorApp
             this.groupBox3.Controls.Add(this.rdo1Axis);
             this.groupBox3.Location = new System.Drawing.Point(13, 13);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(200, 153);
+            this.groupBox3.Size = new System.Drawing.Size(200, 162);
             this.groupBox3.TabIndex = 2;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Configuration";
@@ -840,6 +919,11 @@ namespace HectorApp
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.lblStatus);
+            this.groupBox4.Controls.Add(this.prgExp);
+            this.groupBox4.Controls.Add(this.lblPoints);
+            this.groupBox4.Controls.Add(this.btnRun);
+            this.groupBox4.Controls.Add(this.btnLoadPoints);
             this.groupBox4.Controls.Add(this.rdSin);
             this.groupBox4.Controls.Add(this.rdTrap);
             this.groupBox4.Controls.Add(this.grpSin);
@@ -849,12 +933,48 @@ namespace HectorApp
             this.groupBox4.Controls.Add(this.btnStartTrapezoid);
             this.groupBox4.Controls.Add(this.label18);
             this.groupBox4.Controls.Add(this.txtTrapV);
-            this.groupBox4.Location = new System.Drawing.Point(13, 173);
+            this.groupBox4.Location = new System.Drawing.Point(13, 181);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(627, 397);
+            this.groupBox4.Size = new System.Drawing.Size(627, 389);
             this.groupBox4.TabIndex = 3;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Experiment";
+            // 
+            // prgExp
+            // 
+            this.prgExp.Location = new System.Drawing.Point(206, 348);
+            this.prgExp.Name = "prgExp";
+            this.prgExp.Size = new System.Drawing.Size(334, 35);
+            this.prgExp.TabIndex = 25;
+            // 
+            // lblPoints
+            // 
+            this.lblPoints.AutoSize = true;
+            this.lblPoints.Location = new System.Drawing.Point(281, 61);
+            this.lblPoints.Name = "lblPoints";
+            this.lblPoints.Size = new System.Drawing.Size(92, 13);
+            this.lblPoints.TabIndex = 24;
+            this.lblPoints.Text = "No Points Loaded";
+            // 
+            // btnRun
+            // 
+            this.btnRun.Location = new System.Drawing.Point(546, 348);
+            this.btnRun.Name = "btnRun";
+            this.btnRun.Size = new System.Drawing.Size(75, 35);
+            this.btnRun.TabIndex = 23;
+            this.btnRun.Text = "Run Experiment";
+            this.btnRun.UseVisualStyleBackColor = true;
+            this.btnRun.Click += new System.EventHandler(this.btnRun_Click);
+            // 
+            // btnLoadPoints
+            // 
+            this.btnLoadPoints.Location = new System.Drawing.Point(200, 56);
+            this.btnLoadPoints.Name = "btnLoadPoints";
+            this.btnLoadPoints.Size = new System.Drawing.Size(75, 23);
+            this.btnLoadPoints.TabIndex = 22;
+            this.btnLoadPoints.Text = "Load Points";
+            this.btnLoadPoints.UseVisualStyleBackColor = true;
+            this.btnLoadPoints.Click += new System.EventHandler(this.btnLoadPoints_Click_1);
             // 
             // rdSin
             // 
@@ -1042,50 +1162,14 @@ namespace HectorApp
             this.txtTrapV.TabIndex = 13;
             this.txtTrapV.Text = "0.5";
             // 
-            // txtZWorld
+            // lblStatus
             // 
-            this.txtZWorld.Enabled = false;
-            this.txtZWorld.Location = new System.Drawing.Point(74, 94);
-            this.txtZWorld.Name = "txtZWorld";
-            this.txtZWorld.Size = new System.Drawing.Size(39, 20);
-            this.txtZWorld.TabIndex = 8;
-            this.txtZWorld.Text = "0";
-            // 
-            // txtYWorld
-            // 
-            this.txtYWorld.Enabled = false;
-            this.txtYWorld.Location = new System.Drawing.Point(74, 68);
-            this.txtYWorld.Name = "txtYWorld";
-            this.txtYWorld.Size = new System.Drawing.Size(39, 20);
-            this.txtYWorld.TabIndex = 7;
-            this.txtYWorld.Text = "0";
-            // 
-            // txtXWorld
-            // 
-            this.txtXWorld.Enabled = false;
-            this.txtXWorld.Location = new System.Drawing.Point(74, 42);
-            this.txtXWorld.Name = "txtXWorld";
-            this.txtXWorld.Size = new System.Drawing.Size(39, 20);
-            this.txtXWorld.TabIndex = 6;
-            this.txtXWorld.Text = "0";
-            // 
-            // label15
-            // 
-            this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(26, 27);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(29, 13);
-            this.label15.TabIndex = 9;
-            this.label15.Text = "local";
-            // 
-            // label16
-            // 
-            this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(71, 27);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(32, 13);
-            this.label16.TabIndex = 10;
-            this.label16.Text = "world";
+            this.lblStatus.AutoSize = true;
+            this.lblStatus.Location = new System.Drawing.Point(203, 332);
+            this.lblStatus.Name = "lblStatus";
+            this.lblStatus.Size = new System.Drawing.Size(37, 13);
+            this.lblStatus.TabIndex = 26;
+            this.lblStatus.Text = "Status";
             // 
             // HectorApp
             // 
@@ -1171,10 +1255,118 @@ namespace HectorApp
 
         private void btnSetZero_Click(object sender, EventArgs e)
         {
+            this.set_zero();
+        }
+
+        private void set_zero() {
             this.zero_x = this.current_x;
             this.zero_y = this.current_y;
             this.zero_z = this.current_z;
             this.current_x = this.current_y = this.current_z = 0;
+            this.update_positions();
+        }
+
+        private void btnLoadPoints_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        
+
+        private void btnLoadPoints_Click_1(object sender, EventArgs e)
+        {
+            OpenFileDialog fd = new OpenFileDialog();
+            List<SpacePt> result = new List<SpacePt>();
+
+            if (fd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                String pts = fd.FileName;
+                StreamReader sr = new StreamReader(pts);
+                while (!sr.EndOfStream)
+                {
+                    String line = sr.ReadLine();
+
+                    String[] line_pts = line.Split(',');
+                    SpacePt next_pt = new SpacePt();
+
+                    next_pt.x = double.Parse(line_pts[0]);
+                    next_pt.y = double.Parse(line_pts[1]);
+                    next_pt.z = double.Parse(line_pts[2]);
+
+                    result.Add(next_pt);
+
+                }
+                sr.Close();
+            }
+
+            this.points = result;
+            this.lblPoints.Text = "Loaded " + this.points.Count.ToString() + " Points.";
+        }
+
+        private void btnRun_Click(object sender, EventArgs e)
+        {
+            //set zero
+            DialogResult cd = MessageBox.Show("Set current Poition as (0,0,0)?", "Zero position", MessageBoxButtons.YesNoCancel);
+
+            if (cd == System.Windows.Forms.DialogResult.Yes)
+            {
+                this.set_zero();
+            }
+            else if (cd == System.Windows.Forms.DialogResult.Cancel)
+            {
+                return;
+            }
+
+            //check points
+            lblStatus.Text = "Checking Points";
+            prgExp.Maximum = this.points.Count - 1;
+            for (int i = 0; i < this.points.Count; i++)
+            {
+                if (this.points[i].x + zero_x < 0 || this.points[i].x + zero_x > 1000)
+                {
+                    MessageBox.Show("Point " + (i+1).ToString() + " Exceeds the X boundaries (0-1000) with the current zero point. Aborting");
+                    return;
+                }
+
+                if (this.points[i].y + zero_y < 0 || this.points[i].y + zero_y > 1000)
+                {
+                    MessageBox.Show("Point " + (i+1).ToString() + " Exceeds the Y boundaries (0-1000) with the current zero point. Aborting");
+                    return;
+                }
+
+                if (this.points[i].z + zero_z < 0 || this.points[i].z + zero_z > 1000)
+                {
+                    MessageBox.Show("Point " + (i+1).ToString() + " Exceeds the Z boundaries (0-1000) with the current zero point. Aborting");
+                    return;
+                }
+                this.prgExp.Value = i;
+            }
+
+
+            // Run Experiment
+            lblStatus.Text = "Running Experiment";
+            prgExp.Maximum = this.points.Count-1;
+            // move through the points
+            for (int i = 0; i < this.points.Count; i++)
+            {
+                current_x = Convert.ToDouble(this.points[i].x);
+                current_y = Convert.ToDouble(this.points[i].y);
+                current_z = Convert.ToDouble(this.points[i].z);
+                this.isc.move_abs_mm(current_x + zero_x, current_y + zero_y, current_z + zero_z);
+                this.update_positions();
+                this.prgExp.Value = i;
+                Thread.Sleep(500);
+            }
+
+            lblStatus.Text = "Done!";
+        }
+
+        private void btnResetZero_Click(object sender, EventArgs e)
+        {
+            this.current_x = this.zero_x;
+            this.current_y = this.zero_y;
+            this.current_z = this.zero_z;
+            this.zero_x = this.zero_y = this.zero_z = 0;
             this.update_positions();
         }
 

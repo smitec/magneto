@@ -114,7 +114,7 @@ namespace Magneto
             ys = mm_to_steps(y);
             zs = mm_to_steps(z);
 
-            return this.move_abs_steps(xs, ys, zs);
+            return this.move_abs_steps(-xs, -ys, zs);
         }
 
         public bool move_rel_mm(double x, double y, double z)
@@ -130,7 +130,7 @@ namespace Magneto
             ys = mm_to_steps(y);
             zs = mm_to_steps(z);
 
-            return this.move_rel_steps(xs, ys, zs);
+            return this.move_rel_steps(-xs, -ys, zs);
         }
 
         double step_to_mm(long steps)
