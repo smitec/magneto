@@ -65,7 +65,7 @@ namespace HectorApp
         private Button btnFolder;
         List<double> frequencies = null;
 
-        String folder = "";
+        String folder = "./";
 
 
 
@@ -324,7 +324,7 @@ namespace HectorApp
             pulse_output.Start();
             data_output.Start();
 
-            //record_channels("./output/", (int)(total * sampleRateG), 5);
+            record_channels("./output.csv", (int)(total * sampleRateG), 5);
 
             MessageBox.Show("Done");
 
@@ -1246,9 +1246,9 @@ namespace HectorApp
             this.lblFolder.AutoSize = true;
             this.lblFolder.Location = new System.Drawing.Point(326, 117);
             this.lblFolder.Name = "lblFolder";
-            this.lblFolder.Size = new System.Drawing.Size(98, 13);
+            this.lblFolder.Size = new System.Drawing.Size(160, 13);
             this.lblFolder.TabIndex = 31;
-            this.lblFolder.Text = "No Folder Selected";
+            this.lblFolder.Text = "No Folder Selected (default is ./)";
             // 
             // HectorApp
             // 
@@ -1465,11 +1465,11 @@ namespace HectorApp
                 this.prgSub.Maximum = this.frequencies.Count - 1;
                 for (int f = 0; f < this.frequencies.Count; f++)
                 {
-                    this.record_sin(this.frequencies[f], 5, 5, i.ToString() + "_" + f.ToString() + ".csv");
+                    this.record_sin(this.frequencies[f], 5, 50, i.ToString() + "_" + f.ToString() + ".csv");
                     this.prgSub.Value = f;
                 }
             }
-
+            this.update_positions();
             lblStatus.Text = "Done!";
         }
 
